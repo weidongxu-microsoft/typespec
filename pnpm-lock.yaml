@@ -385,11 +385,11 @@ importers:
   packages/emitter-sample:
     dependencies:
       '@alloy-js/core':
-        specifier: https://pkg.pr.new/alloy-framework/alloy/@alloy-js/core@dcb70bb
-        version: https://pkg.pr.new/alloy-framework/alloy/@alloy-js/core@dcb70bb
+        specifier: https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@c1ff19b
+        version: https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@c1ff19b
       '@alloy-js/typescript':
-        specifier: https://pkg.pr.new/alloy-framework/alloy/@alloy-js/typescript@dcb70bb
-        version: https://pkg.pr.new/alloy-framework/alloy/@alloy-js/typescript@dcb70bb
+        specifier: https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/typescript@c1ff19b
+        version: https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/typescript@c1ff19b
       '@typespec/compiler':
         specifier: workspace:*
         version: link:../compiler
@@ -1744,14 +1744,28 @@ packages:
   '@algolia/transporter@4.23.2':
     resolution: {integrity: sha512-GY3aGKBy+8AK4vZh8sfkatDciDVKad5rTY2S10Aefyjh7e7UGBP4zigf42qVXwU8VOPwi7l/L7OACGMOFcjB0Q==}
 
+  '@alloy-js/babel-plugin-jsx-dom-expressions@https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/babel-plugin-jsx-dom-expressions@c1ff19b':
+    resolution: {tarball: https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/babel-plugin-jsx-dom-expressions@c1ff19b}
+    version: 0.37.21
+    peerDependencies:
+      '@babel/core': ^7.20.12
+
   '@alloy-js/babel-plugin-jsx-dom-expressions@https://pkg.pr.new/alloy-framework/alloy/@alloy-js/babel-plugin-jsx-dom-expressions@dcb70bb':
     resolution: {tarball: https://pkg.pr.new/alloy-framework/alloy/@alloy-js/babel-plugin-jsx-dom-expressions@dcb70bb}
     version: 0.37.21
     peerDependencies:
       '@babel/core': ^7.20.12
 
+  '@alloy-js/core@https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@c1ff19b':
+    resolution: {tarball: https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@c1ff19b}
+    version: 1.0.0
+
   '@alloy-js/core@https://pkg.pr.new/alloy-framework/alloy/@alloy-js/core@dcb70bb':
     resolution: {tarball: https://pkg.pr.new/alloy-framework/alloy/@alloy-js/core@dcb70bb}
+    version: 1.0.0
+
+  '@alloy-js/typescript@https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/typescript@c1ff19b':
+    resolution: {tarball: https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/typescript@c1ff19b}
     version: 1.0.0
 
   '@alloy-js/typescript@https://pkg.pr.new/alloy-framework/alloy/@alloy-js/typescript@dcb70bb':
@@ -5874,6 +5888,10 @@ packages:
     resolution: {integrity: sha512-JfTApdE++cgcTWjsiCQlLyFBMbTUft9ja17saCc93lgV33h4tuCVj7tlvu//qpLwaG+3yEz7/KhahGrUMkVq9g==}
     peerDependencies:
       '@babel/core': ^7.4.0 || ^8.0.0-0 <8.0.0
+
+  babel-preset-alloy@https://pkg.pr.new/IlluzionzDev/alloy/babel-preset-alloy@c1ff19b:
+    resolution: {tarball: https://pkg.pr.new/IlluzionzDev/alloy/babel-preset-alloy@c1ff19b}
+    version: 1.0.0
 
   babel-preset-alloy@https://pkg.pr.new/alloy-framework/alloy/babel-preset-alloy@dcb70bb:
     resolution: {tarball: https://pkg.pr.new/alloy-framework/alloy/babel-preset-alloy@dcb70bb}
@@ -12301,6 +12319,15 @@ snapshots:
       '@algolia/logger-common': 4.23.2
       '@algolia/requester-common': 4.23.2
 
+  '@alloy-js/babel-plugin-jsx-dom-expressions@https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/babel-plugin-jsx-dom-expressions@c1ff19b(@babel/core@7.24.9)':
+    dependencies:
+      '@babel/core': 7.24.9
+      '@babel/helper-module-imports': 7.18.6
+      '@babel/plugin-syntax-jsx': 7.24.7(@babel/core@7.24.9)
+      '@babel/types': 7.24.9
+      html-entities: 2.3.3
+      validate-html-nesting: 1.2.2
+
   '@alloy-js/babel-plugin-jsx-dom-expressions@https://pkg.pr.new/alloy-framework/alloy/@alloy-js/babel-plugin-jsx-dom-expressions@dcb70bb(@babel/core@7.24.9)':
     dependencies:
       '@babel/core': 7.24.9
@@ -12310,12 +12337,30 @@ snapshots:
       html-entities: 2.3.3
       validate-html-nesting: 1.2.2
 
+  '@alloy-js/core@https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@c1ff19b':
+    dependencies:
+      '@babel/core': 7.24.9
+      '@babel/preset-typescript': 7.24.7(@babel/core@7.24.9)
+      '@vue/reactivity': 3.4.33
+      babel-preset-alloy: https://pkg.pr.new/IlluzionzDev/alloy/babel-preset-alloy@c1ff19b(@babel/core@7.24.9)
+      pathe: 1.1.2
+    transitivePeerDependencies:
+      - supports-color
+
   '@alloy-js/core@https://pkg.pr.new/alloy-framework/alloy/@alloy-js/core@dcb70bb':
     dependencies:
       '@babel/core': 7.24.9
       '@babel/preset-typescript': 7.24.7(@babel/core@7.24.9)
       '@vue/reactivity': 3.4.33
       babel-preset-alloy: https://pkg.pr.new/alloy-framework/alloy/babel-preset-alloy@dcb70bb(@babel/core@7.24.9)
+      pathe: 1.1.2
+    transitivePeerDependencies:
+      - supports-color
+
+  '@alloy-js/typescript@https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/typescript@c1ff19b':
+    dependencies:
+      '@alloy-js/core': https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@c1ff19b
+      change-case: 5.4.4
       pathe: 1.1.2
     transitivePeerDependencies:
       - supports-color
@@ -18550,6 +18595,12 @@ snapshots:
       '@babel/helper-define-polyfill-provider': 0.6.1(@babel/core@7.24.9)
     transitivePeerDependencies:
       - supports-color
+
+  babel-preset-alloy@https://pkg.pr.new/IlluzionzDev/alloy/babel-preset-alloy@c1ff19b(@babel/core@7.24.9):
+    dependencies:
+      '@alloy-js/babel-plugin-jsx-dom-expressions': https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/babel-plugin-jsx-dom-expressions@c1ff19b(@babel/core@7.24.9)
+    transitivePeerDependencies:
+      - '@babel/core'
 
   babel-preset-alloy@https://pkg.pr.new/alloy-framework/alloy/babel-preset-alloy@dcb70bb(@babel/core@7.24.9):
     dependencies:
