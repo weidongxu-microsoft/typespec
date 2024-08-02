@@ -1,9 +1,9 @@
 {
-  "name": "@typespec/emitter-framework",
+  "name": "java-emitter",
   "version": "1.0.0",
   "type": "module",
   "private": true,
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "build-src": "babel src -d dist/src --extensions .ts,.tsx",
     "build": "tsc -p . && npm run build-src",
@@ -12,25 +12,15 @@
     "watch": "concurrently --kill-others \"npm run watch-tsc\" \"npm run watch-src\"",
     "test": "vitest run"
   },
-  "exports": {
-    ".": {
-      "node": "./dist/src/core/index.js",
-      "types": "./dist/src/core/index.d.ts"
-    },
-    "./typescript": {
-      "node": "./dist/src/typescript/index.js",
-      "types": "./dist/src/typescript/index.d.ts"
-    }
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "peerDependencies": {
-    "@typespec/compiler": "workspace:~"
+    "@typespec/compiler": "workspace:*"
   },
   "dependencies": {
-    "@typespec/http": "workspace:~",
+    "@typespec/emitter-framework": "workspace:*",
     "@alloy-js/core": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@28b8241",
     "@alloy-js/typescript": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/typescript@28b8241",
     "@alloy-js/java": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/java@28b8241"

@@ -21,8 +21,9 @@
   },
   "dependencies": {
     "@typespec/emitter-framework": "workspace:*",
-    "@alloy-js/core": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@c1ff19b",
-    "@alloy-js/typescript": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/typescript@c1ff19b"
+    "@alloy-js/core": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@28b8241",
+    "@alloy-js/typescript": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/typescript@28b8241",
+    "@alloy-js/java": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/java@28b8241"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.8",

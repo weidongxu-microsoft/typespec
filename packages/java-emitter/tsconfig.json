@@ -13,8 +13,7 @@
     "jsx": "preserve",
 
     "emitDeclarationOnly": true,
-    "rootDir": ".",
-    "outDir": "dist"
+    "outDir": "dist",
   },
   "include": [ "src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "test/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
