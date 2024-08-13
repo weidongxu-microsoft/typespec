@@ -1,7 +1,7 @@
 import { createTypeSpecLibrary } from "@typespec/compiler";
 
 export const $lib = createTypeSpecLibrary({
-  name: "java-emitter",
+  name: "java-spring",
   diagnostics: {},
 });
 
