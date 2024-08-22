@@ -1,5 +1,4 @@
 import * as ay from "@alloy-js/core";
-import { code, refkey } from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { EmitContext, Model, Operation } from "@typespec/compiler";
 import { TypeCollector } from "@typespec/emitter-framework";
@@ -8,20 +7,28 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
+import { MavenProjectConfig } from "@alloy-js/java";
 
 export async function $onEmit(context: EmitContext) {
   const types = queryTypes(context);
 
+  const projectConfig: MavenProjectConfig = {
+    groupId: 'net.microsoft',
+    artifactId: 'generated',
+    version: '1.0.0',
+    javaVersion: 8,
+  }
+
   // TODO: Indent is really weird in generated output
   const result = ay.render(
     <ay.Output externals={[springFramework]}>
-      <SpringProject groupId="me.test" artifactId="server" version="1.0.0">
+      <SpringProject name='TestProject' mavenProjectConfig={projectConfig}>
         <jv.PackageDirectory package="me.test.code">
           <jv.SourceFile path="MainApplication.java">
-            <jv.Annotation type={springFramework["SpringBootApplication"]} />
-            <jv.Class accessModifier="public" name="MainApplication">
-              <jv.Method accessModifier="public" static name="main" parameters={{ args: "String[]" }}>
-                {refkey(springFramework["SpringApplication"])}.run(MainApplication.class, args);
+            <jv.Annotation type={springFramework.SpringBootApplication} />
+            <jv.Class public name="MainApplication">
+              <jv.Method public static name="main" parameters={{ args: "String[]" }}>
+                {springFramework.SpringApplication}.run(MainApplication.class, args);
               </jv.Method>
             </jv.Class>
           </jv.SourceFile>
