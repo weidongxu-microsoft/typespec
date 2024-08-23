@@ -20,6 +20,10 @@
     "./typescript": {
       "node": "./dist/src/typescript/index.js",
       "types": "./dist/src/typescript/index.d.ts"
+    },
+    "./java": {
+      "node": "./dist/src/java/index.js",
+      "types": "./dist/src/java/index.d.ts"
     }
   },
   "keywords": [],
@@ -31,15 +35,15 @@
   },
   "dependencies": {
     "@typespec/http": "workspace:~",
-    "@alloy-js/core": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@434fded",
-    "@alloy-js/typescript": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/typescript@434fded",
-    "@alloy-js/java": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/java@434fded"
+    "@alloy-js/typescript": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/typescript@7ebc840",
+    "@alloy-js/core": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@7ebc840",
+    "@alloy-js/java": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/java@7ebc840"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.8",
     "@babel/core": "^7.24.9",
     "@rollup/plugin-babel": "^6.0.4",
-    "babel-preset-alloy": "https://pkg.pr.new/alloy-framework/alloy/babel-preset-alloy@395a1b8",
+    "babel-preset-alloy": "https://pkg.pr.new/IlluzionzDev/alloy/babel-preset-alloy@7ebc840",
     "concurrently": "^8.2.2",
     "typescript": "^5.5.3",
     "vitest": "^2.0.3"

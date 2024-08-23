@@ -1,6 +1,6 @@
 /* eslint-disable unicorn/filename-case */
 import { ModelProperty } from "@typespec/compiler";
-import { code } from "@alloy-js/core";
+import { code, mapJoin, refkey } from "@alloy-js/core";
 import { FunctionDeclaration } from "@typespec/emitter-framework/typescript";
 import { marked } from "marked";
 import { markedTerminal } from "marked-terminal";
@@ -10,7 +10,6 @@ import { useHelpers } from "../helpers.js";
 import { CliType } from "../index.js";
 import { useCommand } from "./CommandArgParser/CommandArgParser.js";
 import { CLITable3 } from "../dependencies.js";
-import { Reference } from "@alloy-js/typescript";
 
 function removeHashAndBold(s: string) {
   return pc.bold(s.replace(/^#+ /, ""));
@@ -37,9 +36,10 @@ export interface HelpTextProps {}
 
 // eslint-disable-next-line no-empty-pattern
 export function HelpText({}: HelpTextProps) {
-  const { command, options, subcommandMap } = useCommand();
+  const { command, subcommandMap } = useCommand();
+  const options = command.options;
   const helpers = useHelpers();
-  const commandDoc = helpers.getDoc(command);
+  const commandDoc = helpers.getDoc(command.cli);
   const commandDesc = commandDoc
     ? ((marked(commandDoc) as string).trimEnd() + "\n").replace(/\n/g, "\\n").replace(/"/g, '\\"')
     : "";
@@ -48,33 +48,38 @@ export function HelpText({}: HelpTextProps) {
     .map((o) => pushOptionHelp(o))
     .join("");
 
-  const subcommandHelp = [];
+  const subcommandHelpLines = [];
   if (subcommandMap.size > 0) {
-    subcommandHelp.push(code`
-      const subcommandTable = new ${<Reference refkey={CLITable3.default} />}({
+    subcommandHelpLines.push(code`
+      const subcommandTable = new ${CLITable3.default}({
         chars: noFormatting,
       });
     `)
-    subcommandHelp.push(... [...subcommandMap.entries()]
-      .map(([name, cli]) => {
-        return pushSubcommandHelp(name, cli);
+    subcommandHelpLines.push(... [...subcommandMap.entries()]
+      .map(([name, subcommand]) => {
+        return pushSubcommandHelp(name, subcommand.cli);
       }))
 
-    subcommandHelp.push(code`
+      subcommandHelpLines.push(code`
       console.log(\`\\n${pc.bold("Subcommands\n")}\`);
       console.log(subcommandTable.toString());
     `);
   }
+
+  const subcommandHelp = mapJoin(subcommandHelpLines, (v) => v);
+
   return (
     <FunctionDeclaration 
-      name={`${command.name}Help`}
-      parameters={{ "noColor?": "boolean" }}>
+      name={`${command.cli.name}Help`}
+      parameters={{ "noColor?": "boolean" }}
+      refkey={refkey(command, "help")}
+    >
       {code`
         if (noColor || process.env["NO_COLOR"]) {
-          console.log("${command.name} " + handler.version + "\\n");
+          console.log("${command.cli.name} " + handler.version + "\\n");
           console.log("${stripAnsi(commandDesc)}");
         } else {
-          console.log("${command.name} \" + handler.version + \"\\n");
+          console.log("${command.cli.name} \" + handler.version + \"\\n");
           console.log("${commandDesc}");
         }
 
@@ -96,7 +101,7 @@ export function HelpText({}: HelpTextProps) {
           "right-mid": "",
         };
 
-        const table = new ${<Reference refkey={CLITable3.default} />}({
+        const table = new ${CLITable3.default}({
           chars: noFormatting,
         });
         table.push(["--help, -h", "Display this help message."])

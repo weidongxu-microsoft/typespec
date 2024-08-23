@@ -1,0 +1,41 @@
+{
+  "name": "http-client-javascript",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "main": "dist/src/index.js",
+  "scripts": {
+    "build-src": "babel src -d dist/src --extensions '.ts,.tsx'",
+    "build": "tsc -p . && npm run build-src",
+    "watch-src": "babel src -d dist/src --extensions '.ts,.tsx' --watch",
+    "watch-tsc": "tsc -p . --watch",
+    "watch": "concurrently --kill-others \"npm run watch-tsc\" \"npm run watch-src\"",
+    "test": "vitest run",
+    "build-sample": "tsp compile sample/main.tsp --emit http-client-javascript && babel tsp-output -d dist/tsp-output --extensions '.ts,.tsx'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "peerDependencies": {
+    "@typespec/compiler": "workspace:*",
+    "@typespec/http": "workspace:*",
+    "@typespec/rest": "workspace:*",
+    "@typespec/openapi": "workspace:*"
+  },
+  "dependencies": {
+    "@typespec/emitter-framework": "workspace:*",
+    "@alloy-js/typescript": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/typescript@7ebc840",
+    "@alloy-js/core": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@7ebc840"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.24.8",
+    "@babel/core": "^7.24.9",
+    "@rollup/plugin-babel": "^6.0.4",
+    "babel-preset-alloy": "https://pkg.pr.new/IlluzionzDev/alloy/babel-preset-alloy@7ebc840",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.5.3",
+    "vitest": "^2.0.3",
+    "ts-morph": "^23.0.0"
+  }
+}
