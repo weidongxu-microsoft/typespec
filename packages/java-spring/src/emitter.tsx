@@ -1,6 +1,7 @@
 import * as ay from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { EmitContext, Model, Operation } from "@typespec/compiler";
+import { ModelDeclaration, ModelSourceFile } from "@typespec/emitter-framework/java";
 import { TypeCollector } from "@typespec/emitter-framework";
 import fs from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
@@ -8,9 +9,19 @@ import { dirname, join } from "node:path";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
 import { MavenProjectConfig } from "@alloy-js/java";
+import { Class } from "@alloy-js/java";
 
 export async function $onEmit(context: EmitContext) {
   const types = queryTypes(context);
+  const dataTypes = types.dataTypes
+  /*dataTypes.forEach((dataType, index) => {
+    console.log(`\n======= Entry ${index} =======`);
+    console.log(`Data Type Name: ${dataType.name}`);
+    console.log('Details:', dataType);
+    console.log('Properties:', [...dataType.properties.values()]);
+    console.log('===============================\n');
+  });
+  console.log('ops :', types.ops);*/
 
   const projectConfig: MavenProjectConfig = {
     groupId: 'net.microsoft',
@@ -32,6 +43,13 @@ export async function $onEmit(context: EmitContext) {
               </jv.Method>
             </jv.Class>
           </jv.SourceFile>
+
+          <jv.PackageDirectory package={"models"}>
+            <ModelSourceFile type={types.dataTypes[1]}>
+            </ModelSourceFile>
+            <ModelSourceFile type={types.dataTypes[3]}>
+            </ModelSourceFile>
+          </jv.PackageDirectory>
         </jv.PackageDirectory>
       </SpringProject>
     </ay.Output>,
