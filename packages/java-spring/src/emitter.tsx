@@ -10,18 +10,11 @@ import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
 import { MavenProjectConfig } from "@alloy-js/java";
 import { Class } from "@alloy-js/java";
+import { ControllerSourceFile } from "./spring/components/controller-source-file.js";
 
 export async function $onEmit(context: EmitContext) {
   const types = queryTypes(context);
   const dataTypes = types.dataTypes
-  /*dataTypes.forEach((dataType, index) => {
-    console.log(`\n======= Entry ${index} =======`);
-    console.log(`Data Type Name: ${dataType.name}`);
-    console.log('Details:', dataType);
-    console.log('Properties:', [...dataType.properties.values()]);
-    console.log('===============================\n');
-  });
-  console.log('ops :', types.ops);*/
 
   const projectConfig: MavenProjectConfig = {
     groupId: 'net.microsoft',
@@ -33,7 +26,7 @@ export async function $onEmit(context: EmitContext) {
   // TODO: Indent is really weird in generated output
   const result = ay.render(
     <ay.Output externals={[springFramework]}>
-      <SpringProject name='TestProject' mavenProjectConfig={projectConfig}>
+      <SpringProject name="TestProject" mavenProjectConfig={projectConfig}>
         <jv.PackageDirectory package="me.test.code">
           <jv.SourceFile path="MainApplication.java">
             <jv.Annotation type={springFramework.SpringBootApplication} />
@@ -44,6 +37,11 @@ export async function $onEmit(context: EmitContext) {
             </jv.Class>
           </jv.SourceFile>
 
+          <jv.PackageDirectory package={"controllers"}>
+            <ControllerSourceFile path={"Person"}></ControllerSourceFile>
+          </jv.PackageDirectory>
+
+
           <jv.PackageDirectory package={"models"}>
             <ModelSourceFile type={types.dataTypes[1]}>
             </ModelSourceFile>
@@ -51,9 +49,10 @@ export async function $onEmit(context: EmitContext) {
             </ModelSourceFile>
           </jv.PackageDirectory>
         </jv.PackageDirectory>
-      </SpringProject>
-    </ay.Output>,
-  );
+    </SpringProject>
+</ay.Output>,
+)
+  ;
 
   await writeOutput(result, "./tsp-output", true);
 }
