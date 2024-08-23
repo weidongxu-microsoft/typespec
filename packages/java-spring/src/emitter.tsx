@@ -2,6 +2,7 @@ import * as ay from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { MavenProjectConfig } from "@alloy-js/java";
 import { EmitContext, Model, Operation } from "@typespec/compiler";
+import { ModelDeclaration, ModelSourceFile } from "@typespec/emitter-framework/java";
 import { TypeCollector } from "@typespec/emitter-framework";
 import { NamespaceDeclaration } from "@typespec/emitter-framework/java";
 import fs from "node:fs";
@@ -9,6 +10,7 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
+import { Class } from "@alloy-js/java";
 
 export async function $onEmit(context: EmitContext) {
   const types = new TypeCollector(context.program.getGlobalNamespaceType()).flat();
@@ -36,6 +38,14 @@ export async function $onEmit(context: EmitContext) {
       <SpringProject name="TestProject" mavenProjectConfig={projectConfig}>
         <jv.PackageDirectory package="me.test.code">
           <NamespaceDeclaration namespace={dataTypes[0]} />
+          <jv.SourceFile path="MainApplication.java">
+            <jv.Annotation type={springFramework.SpringBootApplication} />
+            <jv.Class public name="MainApplication">
+              <jv.Method public static name="main" parameters={{ args: "String[]" }}>
+                {springFramework.SpringApplication}.run(MainApplication.class, args);
+              </jv.Method>
+            </jv.Class>
+          </jv.SourceFile>
         </jv.PackageDirectory>
       </SpringProject>
     </ay.Output>
