@@ -1,29 +1,38 @@
 import * as ay from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { MavenProjectConfig } from "@alloy-js/java";
-import { EmitContext, Model, Operation } from "@typespec/compiler";
-import { ModelDeclaration, ModelSourceFile } from "@typespec/emitter-framework/java";
+import { EmitContext, Model, Namespace, Operation } from "@typespec/compiler";
 import { TypeCollector } from "@typespec/emitter-framework";
-import { NamespaceDeclaration } from "@typespec/emitter-framework/java";
+import { ModelSourceFile } from "@typespec/emitter-framework/java";
 import fs from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
-import { Class } from "@alloy-js/java";
 
+/**
+ * Just leaving my general thought notes here:
+ *
+ * A spring application will generally consist of the following parts.
+ * - Models (Mapped to actual database objects)
+ * - DTOs (Plain model used to hold some data)
+ * - Route Controllers (Controllers at a certain endpoint, provides GET, POST, PUT, DELETE etc)
+ * - Services (Business logic) that are invoked
+ * - Repositories (Way to retrieve data from where it's stored, database etc)
+ */
 export async function $onEmit(context: EmitContext) {
-  const types = new TypeCollector(context.program.getGlobalNamespaceType()).flat();
+  // Get all types in program, categorize them into models, operations, etc based on tags
+  // Generate in respective sections of program.
 
-  // Going to take top-down approach for generation. Get root namespace and generate all direct
-  // child types. Then iterate over child namespaces and repeat process
-  const dataTypes = [types.namespaces[0]];
-  dataTypes.forEach((dataType, index) => {
-    console.log(`\n======= Entry ${index} =======`);
-    console.log(`Data Type Name: ${dataType.name}`);
-    console.log("Details:", dataType);
-    console.log("===============================\n");
-  });
+  const types = queryTypes(context);
+
+  // types.dataTypes.forEach((dataType, index) => {
+  //   console.log(`\n======= Entry ${index} =======`);
+  //   console.log(`Data Type Name: ${dataType.name}`);
+  //   console.log("Details:", dataType);
+  //   console.log("Decorators:", dataType.decorators);
+  //   console.log("===============================\n");
+  // });
 
   const projectConfig: MavenProjectConfig = {
     groupId: "net.microsoft",
@@ -37,7 +46,6 @@ export async function $onEmit(context: EmitContext) {
     <ay.Output externals={[springFramework]}>
       <SpringProject name="TestProject" mavenProjectConfig={projectConfig}>
         <jv.PackageDirectory package="me.test.code">
-          <NamespaceDeclaration namespace={dataTypes[0]} />
           <jv.SourceFile path="MainApplication.java">
             <jv.Annotation type={springFramework.SpringBootApplication} />
             <jv.Class public name="MainApplication">
@@ -46,12 +54,76 @@ export async function $onEmit(context: EmitContext) {
               </jv.Method>
             </jv.Class>
           </jv.SourceFile>
+          <jv.PackageDirectory package="models">
+            {types.dataTypes.map((type) => (
+              <ModelSourceFile type={type} />
+            ))}
+          </jv.PackageDirectory>
+          <jv.PackageDirectory package="controllers">
+            {emitOperations(types.ops)}
+          </jv.PackageDirectory>
         </jv.PackageDirectory>
       </SpringProject>
     </ay.Output>
   );
 
   await writeOutput(result, "./tsp-output", true);
+}
+
+interface NamespaceOperations {
+  namespace?: Namespace;
+  operations: Operation[];
+}
+
+/**
+ * Collect operations by namespace. Create RouteHandler for namespace. Declare those
+ * operations in that route handler as the service endpoints.
+ *
+ * @param ops
+ */
+function emitOperations(ops: Operation[]) {
+  const operationsByNamespace = ops.reduce(
+    (acc, op) => {
+      const namespaceKey = op.namespace?.name ?? "";
+      if (!acc[namespaceKey]) {
+        acc[namespaceKey] = {
+          namespace: op.namespace,
+          operations: [],
+        };
+      }
+
+      let operations = acc[namespaceKey].operations;
+      operations.push(op);
+      acc[namespaceKey] = { ...acc[namespaceKey], operations };
+      return acc;
+    },
+    {} as Record<string, NamespaceOperations>
+  );
+
+  console.log("Operations by namespace:", operationsByNamespace);
+  return (
+    <>
+      {Object.values(operationsByNamespace).map((nsOps) => {
+        return (
+          <jv.SourceFile path={nsOps.namespace?.name + "Controller.java"}>
+            <jv.Annotation type={springFramework.RestController} />
+            <jv.Class public name={nsOps.namespace?.name + "Controller"}>
+              {nsOps.operations.map((op) => {
+                return (
+                  <>
+                    <jv.Annotation type={springFramework.GetMapping} />
+                    <jv.Method public name={op.name}>
+                      throw new UnsupportedOperationException("Not implemented");
+                    </jv.Method>
+                  </>
+                );
+              })}
+            </jv.Class>
+          </jv.SourceFile>
+        );
+      })}
+    </>
+  );
 }
 
 function queryTypes(context: EmitContext) {

@@ -6,7 +6,7 @@ namespace DemoService {
   @route("/people")
   namespace People {
     model Person<T> {
-      firstName: string | int32;
+      firstName: string;
       lastName: string;
       special: T;
       pets: Pets.Pet[];

@@ -23,7 +23,8 @@
     "@alloy-js/core": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@7ebc840",
     "@alloy-js/java": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/java@7ebc840",
     "@typespec/emitter-framework": "workspace:*",
-    "@typespec/http": "workspace:*"
+    "@typespec/http": "workspace:*",
+    "change-case": "~5.4.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.8",

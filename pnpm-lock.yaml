@@ -459,6 +459,9 @@ importers:
       '@typespec/http':
         specifier: workspace:~
         version: link:../http
+      change-case:
+        specifier: ~5.4.4
+        version: 5.4.4
     devDependencies:
       '@babel/cli':
         specifier: ^7.24.8
@@ -801,13 +804,16 @@ importers:
         version: https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/java@7ebc840
       '@typespec/compiler':
         specifier: workspace:*
-        version: 0.58.1
+        version: link:../compiler
       '@typespec/emitter-framework':
         specifier: workspace:*
         version: link:../emitter-framework
       '@typespec/http':
         specifier: workspace:*
         version: link:../http
+      change-case:
+        specifier: ~5.4.4
+        version: 5.4.4
     devDependencies:
       '@babel/cli':
         specifier: ^7.24.8
@@ -5550,11 +5556,6 @@ packages:
   '@typescript-eslint/visitor-keys@7.15.0':
     resolution: {integrity: sha512-Hqgy/ETgpt2L5xueA/zHHIl4fJI2O4XUE9l4+OIfbJIRSnTJb/QscncdqqZzofQegIJugRIF57OJea1khw2SDw==}
     engines: {node: ^18.18.0 || >=20.0.0}
-
-  '@typespec/compiler@0.58.1':
-    resolution: {integrity: sha512-bVxxM35r40OtuL4+/9W/g1EevlnWnW6i151nsZAFOJj1xWHoE2G9zkx5/Feic8OlzArjhGGLJOLH3Ez1Wrw35A==}
-    engines: {node: '>=18.0.0'}
-    hasBin: true
 
   '@ungap/structured-clone@1.2.0':
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
@@ -17337,7 +17338,7 @@ snapshots:
       get-npm-tarball-url: 2.1.0
       giget: 1.2.3
       globby: 14.0.2
-      jscodeshift: 0.15.2(@babel/preset-env@7.24.5(@babel/core@7.25.2))
+      jscodeshift: 0.15.2(@babel/preset-env@7.24.5(@babel/core@7.24.7))
       leven: 3.1.0
       ora: 5.4.1
       prettier: 3.3.2
@@ -17373,7 +17374,7 @@ snapshots:
       '@types/cross-spawn': 6.0.6
       cross-spawn: 7.0.3
       globby: 14.0.2
-      jscodeshift: 0.15.2(@babel/preset-env@7.24.5(@babel/core@7.25.2))
+      jscodeshift: 0.15.2(@babel/preset-env@7.24.5(@babel/core@7.24.7))
       lodash: 4.17.21
       prettier: 3.3.2
       recast: 0.23.7
@@ -18342,23 +18343,6 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 7.15.0
       eslint-visitor-keys: 3.4.3
-
-  '@typespec/compiler@0.58.1':
-    dependencies:
-      '@babel/code-frame': 7.24.7
-      ajv: 8.16.0
-      change-case: 5.4.4
-      globby: 14.0.2
-      mustache: 4.2.0
-      picocolors: 1.0.1
-      prettier: 3.3.2
-      prompts: 2.4.2
-      semver: 7.6.3
-      temporal-polyfill: 0.2.5
-      vscode-languageserver: 9.0.1
-      vscode-languageserver-textdocument: 1.0.11
-      yaml: 2.4.5
-      yargs: 17.7.2
 
   '@ungap/structured-clone@1.2.0': {}
 
@@ -22170,7 +22154,7 @@ snapshots:
 
   jsbn@1.1.0: {}
 
-  jscodeshift@0.15.2(@babel/preset-env@7.24.5(@babel/core@7.25.2)):
+  jscodeshift@0.15.2(@babel/preset-env@7.24.5(@babel/core@7.24.7)):
     dependencies:
       '@babel/core': 7.25.2
       '@babel/parser': 7.25.0

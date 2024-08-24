@@ -1,5 +1,5 @@
-import { IntrinsicType, Model, Scalar, Type } from "@typespec/compiler";
 import { Value } from "@alloy-js/java";
+import { IntrinsicType, Scalar, Type } from "@typespec/compiler";
 import { getModelName, getScalarValueSv } from "../model-utils.js";
 
 export interface TypeExpressionProps {
@@ -15,6 +15,8 @@ export function TypeExpression({ type }: TypeExpressionProps) {
     case "Number":
     case "String":
       return <Value value={type.value} />;
+    case "Union":
+      return "TODO";
     case "EnumMember":
       return (
         <>
@@ -28,21 +30,17 @@ export function TypeExpression({ type }: TypeExpressionProps) {
         return intrinsicNameToJavaType.get(sv) ? intrinsicNameToJavaType.get(sv) : sv;
       }
 
-      return <TypeExpression type={type.type}/>;
+      return <TypeExpression type={type.type} />;
     case "Model":
-
       if (type.name == "Array") {
         if (type.indexer?.value.kind == "Model") {
           return type.indexer.value.name + "[]";
         }
       }
 
-
       if (type.name != "Array" && type.name != "Record") {
         return getModelName(type);
       }
-
-
 
       // if (isRecord(type)) {
       //   const elementType = type.indexer.value;
@@ -50,6 +48,8 @@ export function TypeExpression({ type }: TypeExpressionProps) {
       // }
 
       // return <InterfaceExpression type={type} />;
+      // TODO Return refkey
+      return "TODO";
       throw new Error("ModelExpression not implemented");
 
     default:
@@ -79,7 +79,6 @@ const intrinsicNameToJavaType = new Map<string, string>([
   ["utcDateTime", "java.time.ZonedDateTime"], // Java 8+ uses java.time for dates
   ["url", "java.net.URL"], // Java URL type
 ]);
-
 
 function getScalarIntrinsicExpression(type: Scalar | IntrinsicType): string {
   if (type.kind === "Scalar" && type.baseScalar && type.namespace?.name !== "TypeSpec") {
