@@ -1,7 +1,7 @@
 import * as ay from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { MavenProjectConfig } from "@alloy-js/java";
-import { EmitContext, Model, Namespace, Operation } from "@typespec/compiler";
+import { EmitContext, Model, Namespace, Operation, Value } from "@typespec/compiler";
 import { TypeCollector } from "@typespec/emitter-framework";
 import { ModelSourceFile } from "@typespec/emitter-framework/java";
 import fs from "node:fs";
@@ -104,14 +104,27 @@ function emitOperations(ops: Operation[]) {
   return (
     <>
       {Object.values(operationsByNamespace).map((nsOps) => {
+        const routePath = (
+          nsOps?.namespace?.decorators?.find((d) => d?.definition?.name === "@route")?.args?.[0]
+            ?.value as Value
+        ).value;
+
+        console.log("Route Path", routePath);
+
         return (
           <jv.SourceFile path={nsOps.namespace?.name + "Controller.java"}>
-            <jv.Annotation type={springFramework.RestController} />
+            <jv.Annotation
+              type={springFramework.RestController}
+              value={{ path: <jv.Value value={routePath} /> }}
+            />
             <jv.Class public name={nsOps.namespace?.name + "Controller"}>
               {nsOps.operations.map((op) => {
                 return (
                   <>
-                    <jv.Annotation type={springFramework.GetMapping} />
+                    <jv.Annotation
+                      type={springFramework.GetMapping}
+                      value={{ path: <jv.Value value={"/"} /> }}
+                    />
                     <jv.Method public name={op.name}>
                       throw new UnsupportedOperationException("Not implemented");
                     </jv.Method>
