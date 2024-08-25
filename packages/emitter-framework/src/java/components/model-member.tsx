@@ -12,12 +12,13 @@ export function ModelMember({ type, memberGetAndSetMethod }: ModelMemberProps) {
   if (memberGetAndSetMethod) {
     const returnType = <TypeExpression type={type}></TypeExpression>;
     const setParams: Record<string, string> = { [type.name]: returnType };
+    const accessName = type.name.charAt(0).toUpperCase() + type.name.slice(1);
     const getter = (
-      <Method name={"get" + type.name} return={returnType} public>{`return ${type.name};`}</Method>
+      <Method name={"get" + accessName} return={returnType} public>{`return ${type.name};`}</Method>
     );
     const setter = (
       <Method
-        name={"set" + type.name}
+        name={"set" + accessName}
         return={returnType}
         public
         parameters={setParams}

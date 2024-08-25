@@ -2,7 +2,7 @@ import * as ay from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { MavenProjectConfig } from "@alloy-js/java";
 import { EmitContext, Model, Namespace, Operation, Value } from "@typespec/compiler";
-import { TypeCollector } from "@typespec/emitter-framework";
+import { isArray, TypeCollector } from "@typespec/emitter-framework";
 import { ModelSourceFile } from "@typespec/emitter-framework/java";
 import fs from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
@@ -100,7 +100,6 @@ function emitOperations(ops: Operation[]) {
     {} as Record<string, NamespaceOperations>
   );
 
-  console.log("Operations by namespace:", operationsByNamespace);
   return (
     <>
       {Object.values(operationsByNamespace).map((nsOps) => {
@@ -109,22 +108,18 @@ function emitOperations(ops: Operation[]) {
             ?.value as Value
         ).value;
 
-        console.log("Route Path", routePath);
-
         return (
           <jv.SourceFile path={nsOps.namespace?.name + "Controller.java"}>
+            <jv.Annotation type={springFramework.RestController} />
             <jv.Annotation
-              type={springFramework.RestController}
+              type={springFramework.RequestMapping}
               value={{ path: <jv.Value value={routePath} /> }}
             />
             <jv.Class public name={nsOps.namespace?.name + "Controller"}>
               {nsOps.operations.map((op) => {
                 return (
                   <>
-                    <jv.Annotation
-                      type={springFramework.GetMapping}
-                      value={{ path: <jv.Value value={"/"} /> }}
-                    />
+                    <jv.Annotation type={springFramework.GetMapping} />
                     <jv.Method public name={op.name}>
                       throw new UnsupportedOperationException("Not implemented");
                     </jv.Method>
@@ -149,6 +144,7 @@ function queryTypes(context: EmitContext) {
 
     const referencedTypes = new TypeCollector(op).flat();
     for (const model of referencedTypes.models) {
+      if (isArray(model)) continue;
       types.add(model);
     }
   }

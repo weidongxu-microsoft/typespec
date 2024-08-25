@@ -1,5 +1,7 @@
-import { Value } from "@alloy-js/java";
-import { IntrinsicType, Scalar, Type } from "@typespec/compiler";
+import { code, refkey } from "@alloy-js/core";
+import { Reference, Value } from "@alloy-js/java";
+import { IntrinsicType, Model, Scalar, Type } from "@typespec/compiler";
+import { isArray, isDeclaration } from "../../core/index.js";
 import { getModelName, getScalarValueSv } from "../model-utils.js";
 
 export interface TypeExpressionProps {
@@ -7,6 +9,12 @@ export interface TypeExpressionProps {
 }
 
 export function TypeExpression({ type }: TypeExpressionProps) {
+  if (isDeclaration(type) && !(type as Model).indexer) {
+    // todo: probably need abstraction around deciding what's a declaration in the output
+    // (it may not correspond to things which are declarations in TypeSpec?)
+    return <Reference refkey={refkey(type)} />;
+  }
+
   switch (type.kind) {
     case "Scalar":
     case "Intrinsic":
@@ -30,10 +38,18 @@ export function TypeExpression({ type }: TypeExpressionProps) {
         return intrinsicNameToJavaType.get(sv) ? intrinsicNameToJavaType.get(sv) : sv;
       }
 
-      return <TypeExpression type={type.type} />;
+      if (isArray(type.type)) {
+        console.log("Is Array", type);
+        console.log("Array Type", type.type.indexer.value);
+        return code`${refkey(type.type.indexer.value)}[]`;
+      }
+
+      console.log("Resolving ", type.type.name);
+      return refkey(type.type);
+    // return <TypeExpression type={type.type} />;
     case "Model":
-      if (type.name == "Array") {
-        if (type.indexer?.value.kind == "Model") {
+      if (isArray(type)) {
+        if (type.indexer?.value.kind === "Model") {
           return type.indexer.value.name + "[]";
         }
       }
