@@ -1,7 +1,7 @@
 import * as ay from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { MavenProjectConfig } from "@alloy-js/java";
-import { EmitContext, Model, Namespace, Operation, Value } from "@typespec/compiler";
+import { EmitContext, Model, Namespace, Operation, StringValue } from "@typespec/compiler";
 import { isArray, TypeCollector } from "@typespec/emitter-framework";
 import { ModelSourceFile } from "@typespec/emitter-framework/java";
 import fs from "node:fs";
@@ -105,8 +105,8 @@ function emitOperations(ops: Operation[]) {
       {Object.values(operationsByNamespace).map((nsOps) => {
         const routePath = (
           nsOps?.namespace?.decorators?.find((d) => d?.definition?.name === "@route")?.args?.[0]
-            ?.value as Value
-        ).value;
+            ?.value as StringValue
+        )?.value;
 
         return (
           <jv.SourceFile path={nsOps.namespace?.name + "Controller.java"}>

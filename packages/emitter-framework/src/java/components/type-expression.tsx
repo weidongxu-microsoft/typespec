@@ -1,5 +1,5 @@
 import { code, refkey } from "@alloy-js/core";
-import { Reference, Value } from "@alloy-js/java";
+import { Generics, Reference, Value } from "@alloy-js/java";
 import { IntrinsicType, Model, Scalar, Type } from "@typespec/compiler";
 import { isArray, isDeclaration } from "../../core/index.js";
 import { getModelName, getScalarValueSv } from "../model-utils.js";
@@ -39,13 +39,15 @@ export function TypeExpression({ type }: TypeExpressionProps) {
       }
 
       if (isArray(type.type)) {
-        console.log("Is Array", type);
-        console.log("Array Type", type.type.indexer.value);
         return code`${refkey(type.type.indexer.value)}[]`;
       }
 
-      console.log("Resolving ", type.type.name);
-      return refkey(type.type);
+      const scalarValue = type?.node?.value?.arguments?.[0]?.argument?.target?.sv;
+      const genericSv = scalarValue ? intrinsicNameToJavaType.get(scalarValue) : null;
+
+      const genericsString = genericSv ? <Generics types={[genericSv]} /> : "";
+
+      return code`${refkey(type.type)}${genericsString}`;
     // return <TypeExpression type={type.type} />;
     case "Model":
       if (isArray(type)) {
