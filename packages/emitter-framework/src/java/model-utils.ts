@@ -2,21 +2,20 @@ import {
   getParentTemplateNode,
   getTypeName,
   Model,
-  ModelProperty, ModelPropertyNode,
+  ModelProperty,
+  ModelPropertyNode,
   Node,
 } from "@typespec/compiler";
-import {  getTypeExpression } from "./components/index.js";
-
-
+import { getTypeExpression } from "./components/index.js";
 
 export function getModelClassName(type: Model) {
   const className = type.name;
   const templateParams = type.node ? getTemplateParams(type.node) : [];
-  return templateParams.length ? `${className}<${templateParams.join(', ')}>` : className;
+  return templateParams.length ? `${className}<${templateParams.join(", ")}>` : className;
 }
 
 export function getTemplateParams(node: Node): string[] {
-  const parentTemplateNode = node? getParentTemplateNode(node) : undefined;
+  const parentTemplateNode = node ? getParentTemplateNode(node) : undefined;
   if (parentTemplateNode) {
     const templateGenericsArray = Array.from(parentTemplateNode.locals?.entries() || []);
     return templateGenericsArray.map(([_, value]) => value.name);
@@ -26,7 +25,7 @@ export function getTemplateParams(node: Node): string[] {
 
 export function getModelName(type: Model) {
   const fullModelName = getTypeName(type);
-  const nameParts = fullModelName.split('.');
+  const nameParts = fullModelName.split(".");
   return nameParts[nameParts.length - 1];
 }
 
@@ -34,7 +33,7 @@ export function getNameTypeRecordFromProperties(type: Model) {
   const propertiesArray = getTypePropertiesArray(type);
   const result: Record<string, string> = {};
 
-  propertiesArray.forEach(property => {
+  propertiesArray.forEach((property) => {
     result[property.name] = getTypeExpression(property);
   });
   return result;
@@ -46,8 +45,8 @@ export function getTypePropertiesArray(type: Model) {
 }
 
 export function getScalarValueSv(type: ModelProperty) {
-  const node = type.node.kind == 15 ? type.node as ModelPropertyNode: undefined;
-  const valueNode = node? node.value : undefined;
+  const node = type.node.kind === 15 ? (type.node as ModelPropertyNode) : undefined;
+  const valueNode = node ? node.value : undefined;
   if (valueNode) {
     const target = "target" in valueNode ? valueNode.target : undefined;
     if (target) {
@@ -56,9 +55,3 @@ export function getScalarValueSv(type: ModelProperty) {
   }
   return undefined;
 }
-
-
-
-
-
-

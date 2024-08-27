@@ -6,15 +6,8 @@ export const springFramework = createLibrary({
   artifactId: "spring-framework",
   version: "5.3.9",
   descriptor: {
-    "org.springframework.boot": [
-      "SpringApplication",
-    ],
-    "org.springframework.boot.autoconfigure": [
-      "SpringBootApplication",
-    ],
-    "org.springframework.web.bind.annotation": [
-      "GetMapping",
-      "RestController",
-    ],
+    "org.springframework.boot": ["SpringApplication"],
+    "org.springframework.boot.autoconfigure": ["SpringBootApplication"],
+    "org.springframework.web.bind.annotation": ["GetMapping", "RestController", "RequestMapping"],
   },
 });
