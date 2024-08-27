@@ -39,6 +39,14 @@ export async function $onEmit(context: EmitContext) {
     artifactId: "generated",
     version: "1.0.0",
     javaVersion: 8,
+    build: {
+      plugins: [
+        {
+          groupId: "org.springframework.boot",
+          artifactId: "spring-boot-maven-plugin",
+        },
+      ],
+    },
   };
 
   // TODO: Indent is really weird in generated output
@@ -67,7 +75,7 @@ export async function $onEmit(context: EmitContext) {
     </ay.Output>
   );
 
-  await writeOutput(result, "./tsp-output", true);
+  await writeOutput(result, "./tsp-output", false);
 }
 
 interface NamespaceOperations {

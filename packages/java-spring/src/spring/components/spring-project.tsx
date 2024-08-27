@@ -1,8 +1,6 @@
 import { ProjectDirectory, ProjectDirectoryProps, useProject } from "@alloy-js/java";
 
-export interface SpringProjectProps extends ProjectDirectoryProps {
-
-}
+export interface SpringProjectProps extends ProjectDirectoryProps {}
 
 export function SpringProject(props: SpringProjectProps) {
   return (
@@ -22,6 +20,6 @@ function SpringDependencies() {
   project.scope.addDependency({
     groupId: "org.springframework.boot",
     artifactId: "spring-boot-starter-web",
-    version: "2.5.0",
+    version: "3.3.3",
   });
 }

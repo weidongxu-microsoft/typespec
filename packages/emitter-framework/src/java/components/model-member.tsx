@@ -19,7 +19,6 @@ export function ModelMember({ type, memberGetAndSetMethod }: ModelMemberProps) {
     const setter = (
       <Method
         name={"set" + accessName}
-        return={returnType}
         public
         parameters={setParams}
       >{`this.${type.name} = ${type.name};`}</Method>

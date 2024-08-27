@@ -1,6 +1,6 @@
 import { code, refkey } from "@alloy-js/core";
 import { Generics, Reference, Value } from "@alloy-js/java";
-import { IntrinsicType, Model, Scalar, Type } from "@typespec/compiler";
+import { IntrinsicType, Model, ModelPropertyNode, Scalar, Type } from "@typespec/compiler";
 import { isArray, isDeclaration } from "../../core/index.js";
 import { getModelName, getScalarValueSv } from "../model-utils.js";
 
@@ -42,7 +42,9 @@ export function TypeExpression({ type }: TypeExpressionProps) {
         return code`${refkey(type.type.indexer.value)}[]`;
       }
 
-      const scalarValue = type?.node?.value?.arguments?.[0]?.argument?.target?.sv;
+      // @ts-expect-error wip code
+      const scalarValue = (type?.node as ModelPropertyNode)?.value?.arguments?.[0]?.argument?.target
+        ?.sv;
       const genericSv = scalarValue ? intrinsicNameToJavaType.get(scalarValue) : null;
 
       const genericsString = genericSv ? <Generics types={[genericSv]} /> : "";
@@ -77,7 +79,7 @@ export function TypeExpression({ type }: TypeExpressionProps) {
 const intrinsicNameToJavaType = new Map<string, string>([
   ["unknown", "Object"], // Java does not have an equivalent for "unknown"
   ["string", "String"],
-  ["int32", "int"],
+  ["int32", "Integer"],
   ["int16", "short"],
   ["float16", "float"], // Java does not have float16, using float
   ["integer", "int"],
