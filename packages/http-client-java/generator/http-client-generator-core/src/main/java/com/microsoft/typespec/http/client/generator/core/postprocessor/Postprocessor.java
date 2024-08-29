@@ -3,8 +3,8 @@
 
 package com.microsoft.typespec.http.client.generator.core.postprocessor;
 
-import com.microsoft.typespec.http.client.generator.core.customization.Customization;
-import com.microsoft.typespec.http.client.generator.core.customization.implementation.Utils;
+import com.azure.autorest.customization.Customization;
+import com.azure.autorest.customization.implementation.Utils;
 import com.microsoft.typespec.http.client.generator.core.extension.plugin.JavaSettings;
 import com.microsoft.typespec.http.client.generator.core.extension.plugin.NewPlugin;
 import com.microsoft.typespec.http.client.generator.core.extension.plugin.PluginLogger;
