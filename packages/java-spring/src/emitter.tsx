@@ -4,15 +4,11 @@ import { MavenProjectConfig } from "@alloy-js/java";
 import { EmitContext, Model, Operation } from "@typespec/compiler";
 import { isArray, TypeCollector } from "@typespec/emitter-framework";
 import { ModelSourceFile } from "@typespec/emitter-framework/java";
-import {
-  getAllHttpServices,
-  getRoutePath,
-  HttpOperation,
-  OperationContainer,
-} from "@typespec/http";
+import { getAllHttpServices } from "@typespec/http";
 import fs from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { emitOperations, OperationsGroup } from "./common/index.js";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
 
@@ -30,11 +26,6 @@ const projectConfig: MavenProjectConfig = {
     ],
   },
 };
-
-interface OperationsGroup {
-  container?: OperationContainer;
-  operations: HttpOperation[];
-}
 
 /**
  * Just leaving my general thought notes here:
@@ -105,47 +96,6 @@ export async function $onEmit(context: EmitContext) {
   await writeOutput(result, "./tsp-output", false);
 }
 
-/**
- * Emit route handlers for http operations. Takes an OperationsGroup
- *
- * @param ops List of http operations
- */
-function emitOperations(context: EmitContext, ops: Record<string, OperationsGroup>) {
-  return (
-    <>
-      {Object.values(ops).map((nsOps) => {
-        if (nsOps.container === undefined) return null;
-
-        // Get route decorator on container
-        const routePath = getRoutePath(context.program, nsOps.container)?.path;
-
-        // TODO: Oncall RouteHandler that takes HttpOperation type. Can query everything off that to construct the route handler
-        return (
-          <jv.SourceFile path={nsOps.container?.name + "Controller.java"}>
-            <jv.Annotation type={springFramework.RestController} />
-            <jv.Annotation
-              type={springFramework.RequestMapping}
-              value={{ path: <jv.Value value={routePath} /> }}
-            />
-            <jv.Class public name={nsOps.container?.name + "Controller"}>
-              {nsOps.operations.map((op) => {
-                return (
-                  <>
-                    <jv.Annotation type={springFramework.GetMapping} />
-                    <jv.Method public return="String" name={op.operation?.name}>
-                      return "Hello, World!";
-                    </jv.Method>
-                  </>
-                );
-              })}
-            </jv.Class>
-          </jv.SourceFile>
-        );
-      })}
-    </>
-  );
-}
-
 function queryTypes(context: EmitContext) {
   const types = new Set<Model>();
   const ops = new Set<Operation>();
@@ -164,6 +114,7 @@ function queryTypes(context: EmitContext) {
   return { dataTypes: [...types], ops: [...ops] };
 }
 
+// TODO: Use typespec library to emit files
 export async function writeOutput(
   dir: ay.OutputDirectory,
   rootDir: string,
