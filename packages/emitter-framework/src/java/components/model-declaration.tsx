@@ -1,9 +1,9 @@
-import { mapJoin } from "@alloy-js/core";
+import { refkey as getRefkey, mapJoin } from "@alloy-js/core";
 import { Class, Constructor } from "@alloy-js/java";
 import { Model } from "@typespec/compiler";
 import {
-  getModelClassName,
   getNameTypeRecordFromProperties,
+  getTemplateParams,
   getTypePropertiesArray,
 } from "../model-utils.js";
 import { ModelConstructor } from "./model-constructor.js";
@@ -15,9 +15,21 @@ export interface ModelDeclarationProps {
 
 export function ModelDeclaration({ type }: ModelDeclarationProps) {
   const body = getBody(type);
-  const name = getModelClassName(type);
+  const name = type.name;
+  const generics = type.node ? getTemplateParams(type.node) : undefined;
+  const genericObject: Record<string, string> = {};
+  generics?.forEach((generic) => (genericObject[generic] = ""));
+  const refkey = getRefkey(type);
 
-  return <Class name={name}>{body}</Class>;
+  return (
+    <Class
+      name={name}
+      refkey={refkey}
+      generics={generics?.length !== 0 ? genericObject : undefined}
+    >
+      {body}
+    </Class>
+  );
 }
 
 function modelParameterizedConstructor(type: Model) {

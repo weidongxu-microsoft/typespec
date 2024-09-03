@@ -1,5 +1,7 @@
-import { IntrinsicType, Model, Scalar, Type } from "@typespec/compiler";
-import { Value } from "@alloy-js/java";
+import { code, refkey } from "@alloy-js/core";
+import { Generics, Reference, Value } from "@alloy-js/java";
+import { IntrinsicType, Model, ModelPropertyNode, Scalar, Type } from "@typespec/compiler";
+import { isArray, isDeclaration } from "../../core/index.js";
 import { getModelName, getScalarValueSv } from "../model-utils.js";
 
 export interface TypeExpressionProps {
@@ -7,6 +9,12 @@ export interface TypeExpressionProps {
 }
 
 export function TypeExpression({ type }: TypeExpressionProps) {
+  if (isDeclaration(type) && !(type as Model).indexer) {
+    // todo: probably need abstraction around deciding what's a declaration in the output
+    // (it may not correspond to things which are declarations in TypeSpec?)
+    return <Reference refkey={refkey(type)} />;
+  }
+
   switch (type.kind) {
     case "Scalar":
     case "Intrinsic":
@@ -15,6 +23,8 @@ export function TypeExpression({ type }: TypeExpressionProps) {
     case "Number":
     case "String":
       return <Value value={type.value} />;
+    case "Union":
+      return "TODO";
     case "EnumMember":
       return (
         <>
@@ -28,21 +38,29 @@ export function TypeExpression({ type }: TypeExpressionProps) {
         return intrinsicNameToJavaType.get(sv) ? intrinsicNameToJavaType.get(sv) : sv;
       }
 
-      return <TypeExpression type={type.type}/>;
-    case "Model":
+      if (isArray(type.type)) {
+        return code`${refkey(type.type.indexer.value)}[]`;
+      }
 
-      if (type.name == "Array") {
-        if (type.indexer?.value.kind == "Model") {
+      // @ts-expect-error wip code
+      const scalarValue = (type?.node as ModelPropertyNode)?.value?.arguments?.[0]?.argument?.target
+        ?.sv;
+      const genericSv = scalarValue ? intrinsicNameToJavaType.get(scalarValue) : null;
+
+      const genericsString = genericSv ? <Generics types={[genericSv]} /> : "";
+
+      return code`${refkey(type.type)}${genericsString}`;
+    // return <TypeExpression type={type.type} />;
+    case "Model":
+      if (isArray(type)) {
+        if (type.indexer?.value.kind === "Model") {
           return type.indexer.value.name + "[]";
         }
       }
 
-
       if (type.name != "Array" && type.name != "Record") {
         return getModelName(type);
       }
-
-
 
       // if (isRecord(type)) {
       //   const elementType = type.indexer.value;
@@ -50,6 +68,8 @@ export function TypeExpression({ type }: TypeExpressionProps) {
       // }
 
       // return <InterfaceExpression type={type} />;
+      // TODO Return refkey
+      return "TODO";
       throw new Error("ModelExpression not implemented");
 
     default:
@@ -59,7 +79,7 @@ export function TypeExpression({ type }: TypeExpressionProps) {
 const intrinsicNameToJavaType = new Map<string, string>([
   ["unknown", "Object"], // Java does not have an equivalent for "unknown"
   ["string", "String"],
-  ["int32", "int"],
+  ["int32", "Integer"],
   ["int16", "short"],
   ["float16", "float"], // Java does not have float16, using float
   ["integer", "int"],
@@ -79,7 +99,6 @@ const intrinsicNameToJavaType = new Map<string, string>([
   ["utcDateTime", "java.time.ZonedDateTime"], // Java 8+ uses java.time for dates
   ["url", "java.net.URL"], // Java URL type
 ]);
-
 
 function getScalarIntrinsicExpression(type: Scalar | IntrinsicType): string {
   if (type.kind === "Scalar" && type.baseScalar && type.namespace?.name !== "TypeSpec") {
