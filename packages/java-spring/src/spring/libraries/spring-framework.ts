@@ -9,5 +9,6 @@ export const springFramework = createLibrary({
     "org.springframework.boot": ["SpringApplication"],
     "org.springframework.boot.autoconfigure": ["SpringBootApplication"],
     "org.springframework.web.bind.annotation": ["GetMapping", "RestController", "RequestMapping"],
+    "org.springframework.beans.factory.annotation": ["Autowired"],
   },
 });
