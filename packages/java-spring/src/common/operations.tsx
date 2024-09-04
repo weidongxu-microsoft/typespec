@@ -1,6 +1,7 @@
-import { refkey } from "@alloy-js/core";
+import { Child, mapJoin, refkey } from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { EmitContext } from "@typespec/compiler";
+import { TypeExpression } from "@typespec/emitter-framework/java";
 import { getRoutePath, HttpOperation, OperationContainer } from "@typespec/http";
 import { springFramework } from "../spring/libraries/index.js";
 
@@ -36,6 +37,7 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
             <jv.Class public name={nsOps.container?.name + "Controller"}>
               <jv.Variable
                 private
+                final
                 type={refkey(`I${nsOps.container?.name}Service`)}
                 name={serviceAccessor}
               />
@@ -82,17 +84,40 @@ export function emitServices(context: EmitContext, ops: Record<string, Operation
           if (nsOps.container === undefined) return null;
 
           return (
-            <>
-              <jv.SourceFile path={`I${nsOps.container?.name}Service.java`}>
-                <jv.Interface public name={`I${nsOps.container?.name}Service`}>
-                  {nsOps.operations.map((op) => {
-                    // Figure out function input, and return return type of operation
+            <jv.SourceFile path={`I${nsOps.container?.name}Service.java`}>
+              <jv.Interface public name={`I${nsOps.container?.name}Service`}>
+                {mapJoin(
+                  nsOps.operations,
+                  (op) => {
+                    // Generated function will take parameters that are passed to endpoint (combination of query, body, path variable etc)
+                    // Return type will be return type of operation
 
-                    return <jv.Method name={op.operation?.name} return="String" />;
-                  })}
-                </jv.Interface>
-              </jv.SourceFile>
-            </>
+                    const responseModel = op.responses[0].type;
+
+                    // Parameters (query, path, and headers)
+                    const params: Record<string, Child> = {};
+                    op.parameters.parameters.forEach((param) => {
+                      params[param.name] = <TypeExpression type={param.param} />;
+                    });
+
+                    // Request body
+                    const body = op.parameters.body?.type;
+                    if (body !== undefined) {
+                      params["body"] = <TypeExpression type={body} />;
+                    }
+
+                    return (
+                      <jv.Method
+                        name={op.operation?.name}
+                        return={<TypeExpression type={responseModel} />}
+                        parameters={params}
+                      />
+                    );
+                  },
+                  { joiner: "\n" }
+                )}
+              </jv.Interface>
+            </jv.SourceFile>
           );
         })}
       </jv.PackageDirectory>

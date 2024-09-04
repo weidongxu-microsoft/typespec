@@ -1,16 +1,18 @@
 import * as ay from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { MavenProjectConfig } from "@alloy-js/java";
-import { EmitContext, Model, Operation } from "@typespec/compiler";
-import { isArray, TypeCollector } from "@typespec/emitter-framework";
+import { EmitContext, getNamespaceFullName, isStdNamespace, Type } from "@typespec/compiler";
+import { TypeCollector } from "@typespec/emitter-framework";
 import { ModelSourceFile } from "@typespec/emitter-framework/java";
-import { getAllHttpServices } from "@typespec/http";
+import { getAllHttpServices, namespace as HttpNamespace } from "@typespec/http";
 import fs from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { emitOperations, emitServices, OperationsGroup } from "./common/index.js";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
+
+const RestNamespace = "TypeSpec.Rest";
 
 const projectConfig: MavenProjectConfig = {
   groupId: "io.typespec",
@@ -82,9 +84,11 @@ export async function $onEmit(context: EmitContext) {
           </jv.SourceFile>
           {emitServices(context, httpOperations)}
           <jv.PackageDirectory package="models">
-            {types.dataTypes.map((type) => (
-              <ModelSourceFile type={type} />
-            ))}
+            {types.dataTypes
+              .filter((type) => type.kind === "Model")
+              .map((type) => (
+                <ModelSourceFile type={type} />
+              ))}
           </jv.PackageDirectory>
           <jv.PackageDirectory package="controllers">
             {emitOperations(context, httpOperations)}
@@ -97,22 +101,49 @@ export async function $onEmit(context: EmitContext) {
   await writeOutput(result, "./tsp-output", false);
 }
 
+// TODO: Only query types from operations, and recursively add referring types
 function queryTypes(context: EmitContext) {
-  const types = new Set<Model>();
-  const ops = new Set<Operation>();
+  const types = new Set<Type>();
   const globalns = context.program.getGlobalNamespaceType();
   const allTypes = new TypeCollector(globalns).flat();
-  for (const op of allTypes.operations) {
-    ops.add(op);
+  for (const dataType of [
+    ...allTypes.models,
+    ...allTypes.unions,
+    ...allTypes.enums,
+    ...allTypes.scalars,
+  ]) {
+    if (isNoEmit(dataType)) {
+      continue;
+    }
 
-    const referencedTypes = new TypeCollector(op).flat();
-    for (const model of referencedTypes.models) {
-      if (isArray(model)) continue;
-      types.add(model);
+    types.add(dataType);
+  }
+
+  return { dataTypes: [...types] };
+}
+
+function isNoEmit(type: Type): boolean {
+  // Skip anonymous types
+  if (!(type as any).name) {
+    return true;
+  }
+
+  if ("namespace" in type && type.namespace) {
+    if (isStdNamespace(type.namespace)) {
+      return true;
+    }
+
+    const fullNamespaceName = getNamespaceFullName(type.namespace);
+
+    if ([HttpNamespace].includes(fullNamespaceName)) {
+      return true;
+    }
+    if ([RestNamespace].includes(fullNamespaceName)) {
+      return true;
     }
   }
 
-  return { dataTypes: [...types], ops: [...ops] };
+  return false;
 }
 
 // TODO: Use typespec library to emit files
