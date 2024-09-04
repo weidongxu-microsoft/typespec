@@ -8,7 +8,7 @@ import { getAllHttpServices } from "@typespec/http";
 import fs from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { emitOperations, OperationsGroup } from "./common/index.js";
+import { emitOperations, emitServices, OperationsGroup } from "./common/index.js";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
 
@@ -80,6 +80,7 @@ export async function $onEmit(context: EmitContext) {
               </jv.Method>
             </jv.Class>
           </jv.SourceFile>
+          {emitServices(context, httpOperations)}
           <jv.PackageDirectory package="models">
             {types.dataTypes.map((type) => (
               <ModelSourceFile type={type} />
