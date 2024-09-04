@@ -12,7 +12,7 @@ namespace DemoService {
       pets: Pets.Pet[];
     }
 
-    op listPeople(sortBy?: string): Person<string>[];
+    op listPeople(@query sortBy?: string, @body person: Person<string>): Person<string>[];
   }
 
   // This will generate a RestController for the /pets endpoint
