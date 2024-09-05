@@ -2,7 +2,7 @@ import { code, refkey } from "@alloy-js/core";
 import { Generics, Reference, Value } from "@alloy-js/java";
 import { IntrinsicType, Model, ModelPropertyNode, Scalar, Type } from "@typespec/compiler";
 import { isArray, isDeclaration } from "../../core/index.js";
-import { getScalarValueSv } from "../model-utils.js";
+import { getScalarValueSv } from "../utils.js";
 
 export interface TypeExpressionProps {
   type: Type;

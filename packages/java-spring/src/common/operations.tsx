@@ -13,6 +13,7 @@ export interface OperationsGroup {
 /**
  * Emit route handlers for http operations. Takes an OperationsGroup
  *
+ * @param context Emit context
  * @param ops List of http operations
  */
 export function emitOperations(context: EmitContext, ops: Record<string, OperationsGroup>) {
