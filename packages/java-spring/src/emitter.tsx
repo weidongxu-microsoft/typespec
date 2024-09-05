@@ -1,15 +1,34 @@
 import * as ay from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { MavenProjectConfig } from "@alloy-js/java";
-import { EmitContext, Model, Namespace, Operation, StringValue } from "@typespec/compiler";
-import { isArray, TypeCollector } from "@typespec/emitter-framework";
+import { EmitContext, getNamespaceFullName, isStdNamespace, Type } from "@typespec/compiler";
+import { TypeCollector } from "@typespec/emitter-framework";
 import { ModelSourceFile } from "@typespec/emitter-framework/java";
+import { getAllHttpServices, namespace as HttpNamespace } from "@typespec/http";
 import fs from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { emitOperations, emitServices, OperationsGroup } from "./common/index.js";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
 import { SpringServiceEndpoint } from "./spring/components/spring-service-endpoint.js";
+
+const RestNamespace = "TypeSpec.Rest";
+
+const projectConfig: MavenProjectConfig = {
+  groupId: "io.typespec",
+  artifactId: "generated",
+  version: "1.0.0",
+  javaVersion: 8,
+  build: {
+    plugins: [
+      {
+        groupId: "org.springframework.boot",
+        artifactId: "spring-boot-maven-plugin",
+      },
+    ],
+  },
+};
 
 /**
  * Just leaving my general thought notes here:
@@ -22,81 +41,22 @@ import { SpringServiceEndpoint } from "./spring/components/spring-service-endpoi
  * - Repositories (Way to retrieve data from where it's stored, database etc)
  */
 export async function $onEmit(context: EmitContext) {
-  // Get all types in program, categorize them into models, operations, etc based on tags
-  // Generate in respective sections of program.
-
+  // Query types needed in program, models, interfaces etc
   const types = queryTypes(context);
 
-  // types.dataTypes.forEach((dataType, index) => {
-  //   console.log(`\n======= Entry ${index} =======`);
-  //   console.log(`Data Type Name: ${dataType.name}`);
-  //   console.log("Details:", dataType);
-  //   console.log("Decorators:", dataType.decorators);
-  //   console.log("===============================\n");
-  // });
+  // Get all http services, then collect all routes from services
+  const services = getAllHttpServices(context.program);
 
-  const projectConfig: MavenProjectConfig = {
-    groupId: "net.microsoft",
-    artifactId: "generated",
-    version: "1.0.0",
-    javaVersion: 8,
-    build: {
-      plugins: [
-        {
-          groupId: "org.springframework.boot",
-          artifactId: "spring-boot-maven-plugin",
-        },
-      ],
-    },
-  };
+  // TODO: For now just take first service
+  const service = services[0][0];
 
-  // TODO: Indent is really weird in generated output
-  const result = ay.render(
-    <ay.Output externals={[springFramework]}>
-      <SpringProject name="TestProject" mavenProjectConfig={projectConfig}>
-        <jv.PackageDirectory package="me.test.code">
-          <jv.SourceFile path="MainApplication.java">
-            <jv.Annotation type={springFramework.SpringBootApplication} />
-            <jv.Class public name="MainApplication">
-              <jv.Method public static name="main" parameters={{ args: "String[]" }}>
-                {springFramework.SpringApplication}.run(MainApplication.class, args);
-              </jv.Method>
-            </jv.Class>
-          </jv.SourceFile>
-          <jv.PackageDirectory package="models">
-            {types.dataTypes.map((type) => (
-              <ModelSourceFile type={type} />
-            ))}
-          </jv.PackageDirectory>
-          <jv.PackageDirectory package="controllers">
-            {emitOperations(types.ops, context)}
-          </jv.PackageDirectory>
-        </jv.PackageDirectory>
-      </SpringProject>
-    </ay.Output>
-  );
-
-  await writeOutput(result, "./tsp-output", false);
-}
-
-interface NamespaceOperations {
-  namespace?: Namespace;
-  operations: Operation[];
-}
-
-/**
- * Collect operations by namespace. Create RouteHandler for namespace. Declare those
- * operations in that route handler as the service endpoints.
- *
- * @param ops
- */
-function emitOperations(ops: Operation[], context: EmitContext) {
-  const operationsByNamespace = ops.reduce(
+  // Collect HttpOperations by container
+  const httpOperations = service.operations.reduce(
     (acc, op) => {
-      const namespaceKey = op.namespace?.name ?? "";
+      const namespaceKey = op.container?.name ?? "";
       if (!acc[namespaceKey]) {
         acc[namespaceKey] = {
-          namespace: op.namespace,
+          container: op.container,
           operations: [],
         };
       }
@@ -106,58 +66,88 @@ function emitOperations(ops: Operation[], context: EmitContext) {
       acc[namespaceKey] = { ...acc[namespaceKey], operations };
       return acc;
     },
-    {} as Record<string, NamespaceOperations>
+    {} as Record<string, OperationsGroup>
   );
 
-  return (
-    <>
-      {Object.values(operationsByNamespace).map((nsOps) => {
-        const routePath = (
-          nsOps?.namespace?.decorators?.find((d) => d?.definition?.name === "@route")?.args?.[0]
-            ?.value as StringValue
-        )?.value;
-
-        return (
-          <jv.SourceFile path={nsOps.namespace?.name + "Controller.java"}>
-            <jv.Annotation type={springFramework.RestController} />
-            <jv.Annotation
-              type={springFramework.RequestMapping}
-              value={{ path: <jv.Value value={routePath} /> }}
-            />
-            <jv.Class public name={nsOps.namespace?.name + "Controller"}>
-              {nsOps.operations.map((op) => {
-                return (
-                  <>
-                    <SpringServiceEndpoint op={op} context={context}></SpringServiceEndpoint>
-                  </>
-                );
-              })}
+  // TODO: Handle array of services, are we generating all in same project, and just compiling
+  // TODO: all operations into one? Or are we generating different java projects for each?
+  const result = ay.render(
+    <ay.Output externals={[springFramework]}>
+      <SpringProject name="TestProject" mavenProjectConfig={projectConfig}>
+        <jv.PackageDirectory package="io.typespec.generated">
+          <jv.SourceFile path="MainApplication.java">
+            <jv.Annotation type={springFramework.SpringBootApplication} />
+            <jv.Class public name="MainApplication">
+              <jv.Method public static name="main" parameters={{ args: "String[]" }}>
+                {springFramework.SpringApplication}.run(MainApplication.class, args);
+              </jv.Method>
             </jv.Class>
           </jv.SourceFile>
-        );
-      })}
-    </>
+          {emitServices(context, httpOperations)}
+          <jv.PackageDirectory package="models">
+            {types.dataTypes
+              .filter((type) => type.kind === "Model")
+              .map((type) => (
+                <ModelSourceFile type={type} />
+              ))}
+          </jv.PackageDirectory>
+          <jv.PackageDirectory package="controllers">
+            {emitOperations(context, httpOperations)}
+          </jv.PackageDirectory>
+        </jv.PackageDirectory>
+      </SpringProject>
+    </ay.Output>
   );
+
+  await writeOutput(result, "./tsp-output", false);
 }
 
+// TODO: Only query types from operations, and recursively add referring types
 function queryTypes(context: EmitContext) {
-  const types = new Set<Model>();
-  const ops = new Set<Operation>();
+  const types = new Set<Type>();
   const globalns = context.program.getGlobalNamespaceType();
   const allTypes = new TypeCollector(globalns).flat();
-  for (const op of allTypes.operations) {
-    ops.add(op);
+  for (const dataType of [
+    ...allTypes.models,
+    ...allTypes.unions,
+    ...allTypes.enums,
+    ...allTypes.scalars,
+  ]) {
+    if (isNoEmit(dataType)) {
+      continue;
+    }
 
-    const referencedTypes = new TypeCollector(op).flat();
-    for (const model of referencedTypes.models) {
-      if (isArray(model)) continue;
-      types.add(model);
+    types.add(dataType);
+  }
+
+  return { dataTypes: [...types] };
+}
+
+function isNoEmit(type: Type): boolean {
+  // Skip anonymous types
+  if (!(type as any).name) {
+    return true;
+  }
+
+  if ("namespace" in type && type.namespace) {
+    if (isStdNamespace(type.namespace)) {
+      return true;
+    }
+
+    const fullNamespaceName = getNamespaceFullName(type.namespace);
+
+    if ([HttpNamespace].includes(fullNamespaceName)) {
+      return true;
+    }
+    if ([RestNamespace].includes(fullNamespaceName)) {
+      return true;
     }
   }
 
-  return { dataTypes: [...types], ops: [...ops] };
+  return false;
 }
 
+// TODO: Use typespec library to emit files
 export async function writeOutput(
   dir: ay.OutputDirectory,
   rootDir: string,

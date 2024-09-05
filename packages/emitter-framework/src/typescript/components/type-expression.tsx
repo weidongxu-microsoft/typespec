@@ -86,13 +86,14 @@ const intrinsicNameToTSType = new Map<string, string>([
   ["float64", "number"], // TODO: bigint?
   ["safeint", "number"],
   ["utcDateTime", "Date"],
+  ["duration", "string"],
   ["url", "string"],
 ]);
 
-function getScalarIntrinsicExpression(type: Scalar | IntrinsicType): string {
+function getScalarIntrinsicExpression(type: Scalar | IntrinsicType): string | null {
   if (type.kind === "Scalar" && type.baseScalar && type.namespace?.name !== "TypeSpec") {
     // This is a delcared scalar
-    throw new Error("Declared scalar not implemented");
+    return null;
     // return <Reference refkey={type} />;
   }
   const tsType = intrinsicNameToTSType.get(type.name);

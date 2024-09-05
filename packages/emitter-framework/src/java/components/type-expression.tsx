@@ -2,7 +2,7 @@ import { code, refkey } from "@alloy-js/core";
 import { Generics, Reference, Value } from "@alloy-js/java";
 import { IntrinsicType, Model, ModelPropertyNode, Scalar, Type } from "@typespec/compiler";
 import { isArray, isDeclaration } from "../../core/index.js";
-import { getModelName, getScalarValueSv } from "../model-utils.js";
+import { getScalarValueSv } from "../model-utils.js";
 
 export interface TypeExpressionProps {
   type: Type;
@@ -39,7 +39,7 @@ export function TypeExpression({ type }: TypeExpressionProps) {
       }
 
       if (isArray(type.type)) {
-        return code`${refkey(type.type.indexer.value)}[]`;
+        return code`${(<TypeExpression type={type.type.indexer.value} />)}[]`;
       }
 
       // @ts-expect-error wip code
@@ -53,24 +53,10 @@ export function TypeExpression({ type }: TypeExpressionProps) {
     // return <TypeExpression type={type.type} />;
     case "Model":
       if (isArray(type)) {
-        if (type.indexer?.value.kind === "Model") {
-          return type.indexer.value.name + "[]";
-        }
+        return code`${(<TypeExpression type={type.indexer.value} />)}[]`;
       }
 
-      if (type.name != "Array" && type.name != "Record") {
-        return getModelName(type);
-      }
-
-      // if (isRecord(type)) {
-      //   const elementType = type.indexer.value;
-      //   return <RecordExpression elementType={elementType} />;
-      // }
-
-      // return <InterfaceExpression type={type} />;
-      // TODO Return refkey
-      return "TODO";
-      throw new Error("ModelExpression not implemented");
+      return refkey(type);
 
     default:
       throw new Error(type.kind + " not supported in TypeExpression");
