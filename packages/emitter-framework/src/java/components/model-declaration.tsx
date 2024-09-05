@@ -23,6 +23,7 @@ export function ModelDeclaration({ type }: ModelDeclarationProps) {
 
   return (
     <Class
+      public
       name={name}
       refkey={refkey}
       generics={generics?.length !== 0 ? genericObject : undefined}
