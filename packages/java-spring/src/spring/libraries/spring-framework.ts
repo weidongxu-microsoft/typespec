@@ -8,6 +8,7 @@ export const springFramework = createLibrary({
   descriptor: {
     "org.springframework.boot": ["SpringApplication"],
     "org.springframework.boot.autoconfigure": ["SpringBootApplication"],
-    "org.springframework.web.bind.annotation": ["GetMapping", "RestController", "RequestMapping"],
+    "org.springframework.web.bind.annotation": ["GetMapping", "PutMapping", "PostMapping", "DeleteMapping",
+      "RestController", "RequestMapping", "RequestBody", "PathVariable"]
   },
 });

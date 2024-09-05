@@ -9,6 +9,7 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
+import { SpringServiceEndpoint } from "./spring/components/spring-service-endpoint.js";
 
 /**
  * Just leaving my general thought notes here:
@@ -68,7 +69,7 @@ export async function $onEmit(context: EmitContext) {
             ))}
           </jv.PackageDirectory>
           <jv.PackageDirectory package="controllers">
-            {emitOperations(types.ops)}
+            {emitOperations(types.ops, context)}
           </jv.PackageDirectory>
         </jv.PackageDirectory>
       </SpringProject>
@@ -89,7 +90,7 @@ interface NamespaceOperations {
  *
  * @param ops
  */
-function emitOperations(ops: Operation[]) {
+function emitOperations(ops: Operation[], context: EmitContext) {
   const operationsByNamespace = ops.reduce(
     (acc, op) => {
       const namespaceKey = op.namespace?.name ?? "";
@@ -127,10 +128,7 @@ function emitOperations(ops: Operation[]) {
               {nsOps.operations.map((op) => {
                 return (
                   <>
-                    <jv.Annotation type={springFramework.GetMapping} />
-                    <jv.Method public name={op.name}>
-                      throw new UnsupportedOperationException("Not implemented");
-                    </jv.Method>
+                    <SpringServiceEndpoint op={op} context={context}></SpringServiceEndpoint>
                   </>
                 );
               })}
