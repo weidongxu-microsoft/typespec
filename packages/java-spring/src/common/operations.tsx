@@ -3,6 +3,7 @@ import * as jv from "@alloy-js/java";
 import { EmitContext } from "@typespec/compiler";
 import { TypeExpression } from "@typespec/emitter-framework/java";
 import { getRoutePath, HttpOperation, OperationContainer } from "@typespec/http";
+import { RestController } from "../spring/components/index.js";
 import { springFramework } from "../spring/libraries/index.js";
 
 export interface OperationsGroup {
@@ -29,42 +30,35 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
 
         // TODO: Oncall RouteHandler that takes HttpOperation type. Can query everything off that to construct the route handler
         return (
-          <jv.SourceFile path={nsOps.container?.name + "Controller.java"}>
-            <jv.Annotation type={springFramework.RestController} />
-            <jv.Annotation
-              type={springFramework.RequestMapping}
-              value={{ path: <jv.Value value={routePath} /> }}
+          <RestController name={nsOps.container?.name} routePath={routePath}>
+            <jv.Variable
+              private
+              final
+              type={refkey(`I${nsOps.container?.name}Service`)}
+              name={serviceAccessor}
             />
-            <jv.Class public name={nsOps.container?.name + "Controller"}>
-              <jv.Variable
-                private
-                final
-                type={refkey(`I${nsOps.container?.name}Service`)}
-                name={serviceAccessor}
-              />
 
-              <jv.Annotation type={springFramework.Autowired} />
-              <jv.Constructor
-                public
-                parameters={{
-                  [serviceAccessor]: refkey(`I${nsOps.container?.name}Service`),
-                }}
-              >
-                this.{serviceAccessor} = {serviceAccessor};
-              </jv.Constructor>
+            <jv.Annotation type={springFramework.Autowired} />
+            <jv.Constructor
+              public
+              parameters={{
+                [serviceAccessor]: refkey(`I${nsOps.container?.name}Service`),
+              }}
+            >
+              this.{serviceAccessor} = {serviceAccessor};
+            </jv.Constructor>
 
-              {nsOps.operations.map((op) => {
-                return (
-                  <>
-                    <jv.Annotation type={springFramework.GetMapping} />
-                    <jv.Method public return="String" name={op.operation?.name}>
-                      return {serviceAccessor}.{op.operation?.name}();
-                    </jv.Method>
-                  </>
-                );
-              })}
-            </jv.Class>
-          </jv.SourceFile>
+            {nsOps.operations.map((op) => {
+              return (
+                <>
+                  <jv.Annotation type={springFramework.GetMapping} />
+                  <jv.Method public return="String" name={op.operation?.name}>
+                    return {serviceAccessor}.{op.operation?.name}();
+                  </jv.Method>
+                </>
+              );
+            })}
+          </RestController>
         );
       })}
     </>
