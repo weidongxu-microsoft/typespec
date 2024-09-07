@@ -52,7 +52,7 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
             {nsOps.operations.map((op) => {
               return (
                 <>
-                  <SpringServiceEndpoint httpOp={op}>
+                  <SpringServiceEndpoint op={op}>
                     return {serviceAccessor}.{op.operation?.name}();
                   </SpringServiceEndpoint>
                 </>

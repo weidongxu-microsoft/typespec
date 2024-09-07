@@ -16,8 +16,12 @@ export function SpringServiceEndpoint({ op, children }: SpringServiceEndpointPro
 
   const paramRecord: Record<string, string> = {};
 
-  for (const param of annotations.parameterAnnotations) {
 
+  for (const param of annotations.parameterAnnotations) {
+    if (!param.annotation) {
+      // Skip if annotation is null
+      continue;
+    }
     const property = param.property.property;
     const paramName = property.name;
     const paramType = <TypeExpression type={property}></TypeExpression>

@@ -10,8 +10,11 @@ export interface AnnotationsProps {
 
 export function SpringAnnotation({annotationKind, annotationParameters}: AnnotationsProps) {
   const kind = SpringAnnotations.get(annotationKind);
-  const valueRecord: Record<string, Child> = {"" : annotationParameters};
-  return <jv.Annotation type={kind} value={valueRecord}></jv.Annotation>
+  if (annotationParameters) {
+    const valueRecord: Record<string, Child> = {"" : annotationParameters};
+    return <jv.Annotation type={kind} value={valueRecord}></jv.Annotation>
+  }
+  return <jv.Annotation type={kind}></jv.Annotation>
 }
 
 
@@ -33,6 +36,8 @@ export function collectAnnotations(op: HttpOperation) {
   const routeAnnotation = <SpringAnnotation annotationKind={route} annotationParameters={path}></SpringAnnotation>
 
   const parameterProperties = op.parameters.properties;
+
+  console.log(parameterProperties);
   const parameterAnnotations = parameterProperties.map(httpProperty => ({
     property: httpProperty,
     annotation: getParamAnnotation(httpProperty)
@@ -53,18 +58,19 @@ function getParamAnnotation(property: HttpProperty) {
   switch (property.kind) {
     case "header":
     case "query":
-      annotationKind = property.property.name;
+      annotationKind = property.kind;
       annotationParameters = property.options.name;
       break;
     case "body":
     case "multipartBody":
     case "bodyRoot":
     case "statusCode":
-      annotationKind = property.property.name;
+      annotationKind = property.kind;
       break;
-
+    case "bodyProperty":
+      return null;
     default:
-      annotationKind = property.property.name;
+      annotationKind = property.kind;
   }
 
   return <SpringAnnotation annotationKind={annotationKind} annotationParameters={annotationParameters}/>
