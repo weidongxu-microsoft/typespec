@@ -23,10 +23,7 @@ export function getSpringParameters(httpParameters: HttpProperty[]) {
 }
 
 export function getParamType(param: HttpProperty) {
-  const type = <TypeExpression type={param.property}></TypeExpression>
-  return(
-    type
-  )
+  return <TypeExpression type={param.property}></TypeExpression>
 }
 
 export function getParamAnnotation(param: HttpProperty): string {

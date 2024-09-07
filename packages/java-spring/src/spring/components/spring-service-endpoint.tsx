@@ -1,19 +1,20 @@
-import { EmitContext, ignoreDiagnostics, Model, Operation } from "@typespec/compiler";
-import { getHttpOperation, getOperationParameters, getPathParamName, getPathParamOptions } from "@typespec/http";
+import {
+  HttpOperation,
+} from "@typespec/http";
 import { httpDecoratorToSpringAnnotation } from "./utils.js";
 import * as jv from "@alloy-js/java"
-import { Child } from "@alloy-js/core";
+import { Child, Children } from "@alloy-js/core";
 import { getSpringParameters } from "./spring-parameters.js";
 import { TypeExpression } from "@typespec/emitter-framework/java";
 
 export interface SpringServiceEndpointProps{
-  op: Operation;
-  context: EmitContext;
+  httpOp: HttpOperation;
+  children?: Children;
 }
 
-export function SpringServiceEndpoint({ op, context }: SpringServiceEndpointProps) {
+export function SpringServiceEndpoint({ httpOp, children }: SpringServiceEndpointProps) {
 
-  const httpOp = ignoreDiagnostics(getHttpOperation(context.program, op));
+  const op = httpOp.operation;
   const path = httpOp.uriTemplate;
   const httpOpParams = httpOp.parameters;
   const properties = httpOpParams.properties;
@@ -38,8 +39,7 @@ export function SpringServiceEndpoint({ op, context }: SpringServiceEndpointProp
   return(
     <>
       <jv.Annotation type={route} value={pathRecord}></jv.Annotation>
-      <jv.Method name={op.name} return={returnTypeName} parameters={params}>
-        throw new UnsupportedOperationException("Not implemented");
+      <jv.Method name={op.name} return={returnTypeName} parameters={params} children={children}>
       </jv.Method>
       <>{`\n`}</>
     </>
