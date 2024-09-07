@@ -3,7 +3,7 @@ import * as jv from "@alloy-js/java";
 import { MavenProjectConfig } from "@alloy-js/java";
 import { EmitContext, getNamespaceFullName, isStdNamespace, Type } from "@typespec/compiler";
 import { TypeCollector } from "@typespec/emitter-framework";
-import { ModelSourceFile } from "@typespec/emitter-framework/java";
+import { ModelDeclaration } from "@typespec/emitter-framework/java";
 import { getAllHttpServices, namespace as HttpNamespace } from "@typespec/http";
 import fs from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
@@ -61,7 +61,7 @@ export async function $onEmit(context: EmitContext) {
         };
       }
 
-      let operations = acc[namespaceKey].operations;
+      const operations = acc[namespaceKey].operations;
       operations.push(op);
       acc[namespaceKey] = { ...acc[namespaceKey], operations };
       return acc;
@@ -88,7 +88,9 @@ export async function $onEmit(context: EmitContext) {
             {types.dataTypes
               .filter((type) => type.kind === "Model")
               .map((type) => (
-                <ModelSourceFile type={type} />
+                <jv.SourceFile path={type.name + ".java"}>
+                  <ModelDeclaration type={type} />
+                </jv.SourceFile>
               ))}
           </jv.PackageDirectory>
           <jv.PackageDirectory package="controllers">

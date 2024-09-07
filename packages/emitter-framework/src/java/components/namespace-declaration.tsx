@@ -1,6 +1,5 @@
 import * as jv from "@alloy-js/java";
 import { Namespace } from "@typespec/compiler";
-import { ModelSourceFile } from "./model-source-file.js";
 
 export interface NamespaceDeclarationProps {
   namespace: Namespace;
@@ -57,9 +56,6 @@ export function NamespaceDeclaration(props: NamespaceDeclarationProps) {
     <jv.PackageDirectory package={sanitizeName}>
       {namespaces.map((namespace) => {
         return <NamespaceDeclaration namespace={namespace} />;
-      })}
-      {models.map((model) => {
-        return <ModelSourceFile type={model} />;
       })}
     </jv.PackageDirectory>
   );
