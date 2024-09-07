@@ -1,45 +1,34 @@
 import {
   HttpOperation,
 } from "@typespec/http";
-import { httpDecoratorToSpringAnnotation } from "./utils.js";
 import * as jv from "@alloy-js/java"
-import { Child, Children } from "@alloy-js/core";
-import { getSpringParameters } from "./spring-parameters.js";
+import { Children } from "@alloy-js/core";
 import { TypeExpression } from "@typespec/emitter-framework/java";
+import { collectAnnotations, SpringAnnotations } from "./annotations.js";
 
 export interface SpringServiceEndpointProps{
-  httpOp: HttpOperation;
+  op: HttpOperation;
   children?: Children;
 }
 
-export function SpringServiceEndpoint({ httpOp, children }: SpringServiceEndpointProps) {
+export function SpringServiceEndpoint({ op, children }: SpringServiceEndpointProps) {
+  const annotations = collectAnnotations(op);
 
-  const op = httpOp.operation;
-  const path = httpOp.uriTemplate;
-  const httpOpParams = httpOp.parameters;
-  const properties = httpOpParams.properties;
-  const emptyParams: Record<string, any> = {};
+  const paramRecord: Record<string, string> = {};
 
-  const hasProperties = properties && properties.length > 0;
-  const params: Record<string, any> = hasProperties ? (
-    getSpringParameters(properties)
-  ) : (
-    emptyParams
-  );
+  for (const param of annotations.parameterAnnotations) {
 
-  const pathRecord : Record<string, Child> = {"" : path};
+    const property = param.property.property;
+    const paramName = property.name;
+    const paramType = <TypeExpression type={property}></TypeExpression>
 
-  const returnType = op.returnType;
-  console.log(returnType);
-  const returnTypeName = <TypeExpression type={returnType}/>;
+    paramRecord[paramName] = <>{param.annotation} {paramType}</>;
+  }
 
-  const route = httpDecoratorToSpringAnnotation.get(httpOp.verb);
-
-  console.log(route);
   return(
     <>
-      <jv.Annotation type={route} value={pathRecord}></jv.Annotation>
-      <jv.Method name={op.name} return={returnTypeName} parameters={params} children={children}>
+      <>{annotations.routeAnnotation}</>
+      <jv.Method name={op.operation.name} parameters={paramRecord} children={children}>
       </jv.Method>
       <>{`\n`}</>
     </>
