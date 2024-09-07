@@ -10,6 +10,7 @@ export const httpDecoratorToSpringAnnotation = new Map<string, Refkey>([
   ["post", springFramework.PostMapping],
   ["body", springFramework.RequestBody],
   ["path", springFramework.PathVariable],
+  ["header", springFramework.RequestHeader]
 ])
 
 

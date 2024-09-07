@@ -16,7 +16,7 @@ namespace DemoService {
     @get op listPeople(sortBy?: string): Person<string>[];
 
     @route("/{id}")
-    @put op replacePerson(@body person: Person<int32>, @path id: int32): Person<int32>;
+    @put op replacePerson(@header person: Person<int32>, @path id: int32): Person<int32>;
   }
 
   // This will generate a RestController for the /pets endpoint
