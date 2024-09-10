@@ -36,9 +36,12 @@ export function collectAnnotations(op: HttpOperation) {
   
   const routeAnnotation = <SpringAnnotation annotationKind={route} annotationParameters={path}></SpringAnnotation>
 
-  const parameterProperties = op.parameters.properties;
+  const parameterProperties = op.parameters.properties.filter(
+    (httpProperty) => {
+      return !(httpProperty.kind === "bodyProperty" && httpProperty.path.length > 1);
+    }
+  );
 
-  console.log(parameterProperties);
   const parameterAnnotations = parameterProperties.map(httpProperty => ({
     property: httpProperty,
     annotation: getParamAnnotation(httpProperty)
