@@ -23,6 +23,7 @@ export const SpringAnnotations = new Map<string, Refkey>([
   ["put", springFramework.PutMapping],
   ["delete", springFramework.DeleteMapping],
   ["post", springFramework.PostMapping],
+  ["patch", springFramework.PatchMapping],
   ["body", springFramework.RequestBody],
   ["path", springFramework.PathVariable],
   ["header", springFramework.RequestHeader],
@@ -36,6 +37,9 @@ export function collectAnnotations(op: HttpOperation) {
   
   const routeAnnotation = <SpringAnnotation annotationKind={route} annotationParameters={path}></SpringAnnotation>
 
+  /**filters out parameter properties taken from a model type. If the parameter type is a model
+   * then all the properties of that model will be present in parameters.properties.
+  */
   const parameterProperties = op.parameters.properties.filter(
     (httpProperty) => {
       return !(httpProperty.kind === "bodyProperty" && httpProperty.path.length > 1);
