@@ -25,7 +25,8 @@ export const SpringAnnotations = new Map<string, Refkey>([
   ["post", springFramework.PostMapping],
   ["body", springFramework.RequestBody],
   ["path", springFramework.PathVariable],
-  ["header", springFramework.RequestHeader]
+  ["header", springFramework.RequestHeader],
+  ["query", springFramework.RequestParam],
 ])
 
 export function collectAnnotations(op: HttpOperation) {
