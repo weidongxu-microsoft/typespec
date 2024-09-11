@@ -1,20 +1,13 @@
 import { code, refkey } from "@alloy-js/core";
-import { Generics, Reference, Value } from "@alloy-js/java";
-import { IntrinsicType, Model, ModelPropertyNode, Scalar, Type } from "@typespec/compiler";
-import { isArray, isDeclaration } from "../../core/index.js";
-import { getScalarValueSv } from "../utils.js";
+import { Generics, Value } from "@alloy-js/java";
+import { IntrinsicType, Scalar, Type } from "@typespec/compiler";
+import { isArray } from "../../core/index.js";
 
 export interface TypeExpressionProps {
   type: Type;
 }
 
 export function TypeExpression({ type }: TypeExpressionProps) {
-  if (isDeclaration(type) && !(type as Model).indexer) {
-    // todo: probably need abstraction around deciding what's a declaration in the output
-    // (it may not correspond to things which are declarations in TypeSpec?)
-    return <Reference refkey={refkey(type)} />;
-  }
-
   switch (type.kind) {
     case "Scalar":
     case "Intrinsic":
@@ -24,7 +17,7 @@ export function TypeExpression({ type }: TypeExpressionProps) {
     case "String":
       return <Value value={type.value} />;
     case "Union":
-      return "TODO";
+      return "Object";
     case "EnumMember":
       return (
         <>
@@ -32,37 +25,29 @@ export function TypeExpression({ type }: TypeExpressionProps) {
         </>
       );
     case "ModelProperty":
-      const sv = getScalarValueSv(type);
-
-      if (sv) {
-        return intrinsicNameToJavaType.get(sv) ? intrinsicNameToJavaType.get(sv) : sv;
-      }
-
-      if (isArray(type.type)) {
-        return code`${(<TypeExpression type={type.type.indexer.value} />)}[]`;
-      }
-
-      // @ts-expect-error wip code
-      const scalarValue = (type?.node as ModelPropertyNode)?.value?.arguments?.[0]?.argument?.target
-        ?.sv;
-      const genericSv = scalarValue ? intrinsicNameToJavaType.get(scalarValue) : null;
-
-      const genericsString = genericSv ? <Generics types={[genericSv]} /> : "";
-
-      return code`${refkey(type.type)}${genericsString}`;
-    // return <TypeExpression type={type.type} />;
+      return <TypeExpression type={type.type} />;
     case "Model":
       if (isArray(type)) {
         return code`${(<TypeExpression type={type.indexer.value} />)}[]`;
       }
 
-      return refkey(type);
+      // Collect generic arguments
+      const genericArgs = type.templateMapper?.args;
+      const genericsString =
+        (genericArgs?.length ?? 0) > 0 ? (
+          <Generics types={genericArgs?.map((gen) => <TypeExpression type={gen as Type} />)} />
+        ) : (
+          ""
+        );
+
+      return code`${refkey(type)}${genericsString}`;
 
     default:
-      throw new Error(type.kind + " not supported in TypeExpression");
+    // console.warn("TypeExpression: unhandled type", type);
   }
 }
-const intrinsicNameToJavaType = new Map<string, string>([
+
+export const intrinsicNameToJavaType = new Map<string, string>([
   ["unknown", "Object"], // Java does not have an equivalent for "unknown"
   ["string", "String"],
   ["int32", "Integer"],

@@ -34,7 +34,7 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
             <jv.Variable
               private
               final
-              type={refkey(`I${nsOps.container?.name}Service`)}
+              type={refkey(`${nsOps.container?.name}Service`)}
               name={serviceAccessor}
             />
 
@@ -42,7 +42,7 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
             <jv.Constructor
               public
               parameters={{
-                [serviceAccessor]: refkey(`I${nsOps.container?.name}Service`),
+                [serviceAccessor]: refkey(`${nsOps.container?.name}Service`),
               }}
             >
               this.{serviceAccessor} = {serviceAccessor};
@@ -79,8 +79,8 @@ export function emitServices(context: EmitContext, ops: Record<string, Operation
           if (nsOps.container === undefined) return null;
 
           return (
-            <jv.SourceFile path={`I${nsOps.container?.name}Service.java`}>
-              <jv.Interface public name={`I${nsOps.container?.name}Service`}>
+            <jv.SourceFile path={`${nsOps.container?.name}Service.java`}>
+              <jv.Interface public name={`${nsOps.container?.name}Service`}>
                 {mapJoin(
                   nsOps.operations,
                   (op) => {
