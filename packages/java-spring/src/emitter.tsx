@@ -1,6 +1,6 @@
 import * as ay from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
-import { MavenProjectConfig } from "@alloy-js/java";
+import { javaUtil, MavenProjectConfig } from "@alloy-js/java";
 import { EmitContext, getNamespaceFullName, isStdNamespace, Type } from "@typespec/compiler";
 import { TypeCollector } from "@typespec/emitter-framework";
 import { ModelDeclaration } from "@typespec/emitter-framework/java";
@@ -71,7 +71,7 @@ export async function $onEmit(context: EmitContext) {
   // TODO: Handle array of services, are we generating all in same project, and just compiling
   // TODO: all operations into one? Or are we generating different java projects for each?
   const result = ay.render(
-    <ay.Output externals={[springFramework]}>
+    <ay.Output externals={[springFramework, javaUtil]}>
       <SpringProject name="TestProject" mavenProjectConfig={projectConfig}>
         <jv.PackageDirectory package="io.typespec.generated">
           <jv.SourceFile path="MainApplication.java">

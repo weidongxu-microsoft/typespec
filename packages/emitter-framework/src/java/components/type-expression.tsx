@@ -1,5 +1,5 @@
 import { code, refkey } from "@alloy-js/core";
-import { Generics, Value } from "@alloy-js/java";
+import { Generics, javaUtil, Value } from "@alloy-js/java";
 import { IntrinsicType, Scalar, Type } from "@typespec/compiler";
 import { isArray } from "../../core/index.js";
 
@@ -28,7 +28,7 @@ export function TypeExpression({ type }: TypeExpressionProps) {
       return <TypeExpression type={type.type} />;
     case "Model":
       if (isArray(type)) {
-        return code`${(<TypeExpression type={type.indexer.value} />)}[]`;
+        return code`${javaUtil.List}${(<Generics types={[<TypeExpression type={type.indexer.value} />]} />)}`;
       }
 
       // Collect generic arguments
