@@ -20,7 +20,7 @@ namespace DemoService {
   namespace Pets {
     // Just defined inside package
     model Pet {
-      name: string;
+      name: string | int32;
       owner?: People.Person<int32>;
     }
 
