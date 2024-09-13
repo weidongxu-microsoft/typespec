@@ -19,11 +19,16 @@ export function SpringServiceEndpoint({ op, children }: SpringServiceEndpointPro
 
   for (const param of annotations.parameterAnnotations) {
 
-    const property = param.property.property;
-    const paramName = property.name;
+    const property = param.parameter.param;
+    const paramName = param.parameter.name;
     const paramType = <TypeExpression type={property}></TypeExpression>
 
     paramRecord[paramName] = <>{param.annotation} {paramType}</>;
+  }
+
+  if (annotations.body && annotations.body.property) {
+    const bodyType = <TypeExpression type={annotations.body.property}></TypeExpression>
+    paramRecord[annotations.body.property?.name] = <>{annotations.bodyParamAnnotation} {bodyType}</>
   }
 
   return(
