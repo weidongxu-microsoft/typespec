@@ -13,7 +13,7 @@ namespace DemoService {
       pets: Pets.Pet[];
     }
 
-    @get op listPeople(sortBy?: string): Person<string>[];
+    @get op listPeople(@body sortBy?: string): Person<string>[];
 
     @route("/{id}")
     @put op replacePerson(@header("NewPerson") person: Person<int32>, @path id: int32, @body name: string): Person<int32>;
