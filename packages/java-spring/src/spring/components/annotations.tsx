@@ -1,7 +1,8 @@
 import * as jv from "@alloy-js/java"
 import { Child, Refkey } from "@alloy-js/core";
 import { springFramework } from "../libraries/index.js";
-import { HttpOperation, HttpProperty } from "@typespec/http";
+import { HttpOperation, HttpOperationParameter, HttpProperty } from "@typespec/http";
+import { TypeExpression } from "@typespec/emitter-framework/java";
 
 export interface AnnotationsProps {
   annotationKind: string;
@@ -32,53 +33,48 @@ export const SpringAnnotations = new Map<string, Refkey>([
 
 export function collectAnnotations(op: HttpOperation) {
   
-  const route = op.verb;
-  const path = op.uriTemplate;
+  const route = <jv.Value value={op.verb}/>;
+  const path = <jv.Value value={op.uriTemplate}/>;
   
   const routeAnnotation = <SpringAnnotation annotationKind={route} annotationParameters={path}></SpringAnnotation>
 
   /**filters out parameter properties taken from a model type. If the parameter type is a model
    * then all the properties of that model will be present in parameters.properties.
   */
-  const parameterProperties = op.parameters.properties.filter(
-    (httpProperty) => {
-      return !(httpProperty.kind === "bodyProperty" && httpProperty.path.length > 1);
-    }
-  );
+  const parameters = op.parameters.parameters;
 
-  const parameterAnnotations = parameterProperties.map(httpProperty => ({
-    property: httpProperty,
-    annotation: getParamAnnotation(httpProperty)
+  const parameterAnnotations = parameters.map(httpParam => ({
+    parameter: httpParam,
+    annotation: getParamAnnotation(httpParam),
   }));
+
+  const body = op.parameters.body;
+  const bodyAnnotationKind = body?.bodyKind == "single" ? "body" : "multipartBody";
+  const bodyParamAnnotation = <SpringAnnotation annotationKind={bodyAnnotationKind}/>
 
   return {
     routeAnnotation,
     parameterAnnotations,
+    body,
+    bodyParamAnnotation
   };
 
 }
 
-function getParamAnnotation(property: HttpProperty) {
+function getParamAnnotation(parameter: HttpOperationParameter) {
 
   let annotationKind : string;
   let annotationParameters : string | undefined;
 
-  switch (property.kind) {
+  switch (parameter.type) {
     case "header":
     case "query":
-      annotationKind = property.kind;
-      annotationParameters = property.options.name;
+      annotationKind = parameter.type;
+      annotationParameters = parameter.name;
       break;
-    case "body":
-    case "multipartBody":
-    case "bodyRoot":
-    case "statusCode":
-      annotationKind = property.kind;
+    case "path":
+      annotationKind = parameter.type;
       break;
-    case "bodyProperty":
-      return null;
-    default:
-      annotationKind = property.kind;
   }
 
   return <SpringAnnotation annotationKind={annotationKind} annotationParameters={annotationParameters}/>
