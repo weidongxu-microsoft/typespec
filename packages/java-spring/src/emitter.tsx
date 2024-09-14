@@ -4,7 +4,12 @@ import { javaUtil, MavenProjectConfig } from "@alloy-js/java";
 import { EmitContext, getNamespaceFullName, isStdNamespace, Type } from "@typespec/compiler";
 import { TypeCollector } from "@typespec/emitter-framework";
 import { ModelDeclaration } from "@typespec/emitter-framework/java";
-import { getAllHttpServices, namespace as HttpNamespace } from "@typespec/http";
+import {
+  getAllHttpServices,
+  namespace as HttpNamespace,
+  HttpOperation,
+  HttpService,
+} from "@typespec/http";
 import fs from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -46,11 +51,15 @@ export async function $onEmit(context: EmitContext) {
   // Get all http services, then collect all routes from services
   const services = getAllHttpServices(context.program);
 
-  // TODO: For now just take first service
-  const service = services[0][0];
+  // Collect operations from all services into one
+  const serviceOperations: HttpOperation[] = [];
+
+  services.forEach((service) => {
+    serviceOperations.push(...((service[0] as HttpService)?.operations ?? []));
+  });
 
   // Collect HttpOperations by container
-  const httpOperations = service.operations.reduce(
+  const httpOperations = serviceOperations.reduce(
     (acc, op) => {
       const namespaceKey = op.container?.name ?? "";
       if (!acc[namespaceKey]) {
@@ -68,8 +77,6 @@ export async function $onEmit(context: EmitContext) {
     {} as Record<string, OperationsGroup>
   );
 
-  // TODO: Handle array of services, are we generating all in same project, and just compiling
-  // TODO: all operations into one? Or are we generating different java projects for each?
   const result = ay.render(
     <ay.Output externals={[springFramework, javaUtil]}>
       <SpringProject name="TestProject" mavenProjectConfig={projectConfig}>
