@@ -21,6 +21,10 @@
       "node": "./dist/src/typescript/index.js",
       "types": "./dist/src/typescript/index.d.ts"
     },
+    "./java": {
+      "node": "./dist/src/java/index.js",
+      "types": "./dist/src/java/index.d.ts"
+    },
     "./testing": {
       "node": "./dist/src/testing/index.js",
       "types": "./dist/src/testing/index.d.ts"
@@ -38,7 +42,8 @@
   "dependencies": {
     "@alloy-js/core": "https://pkg.pr.new/alloy-framework/alloy/@alloy-js/core@0f9a3a3",
     "@alloy-js/typescript": "https://pkg.pr.new/alloy-framework/alloy/@alloy-js/typescript@0f9a3a3",
-    "@alloy-js/java": "https://pkg.pr.new/alloy-framework/alloy/@alloy-js/java@0f9a3a3"
+    "@alloy-js/java": "https://pkg.pr.new/alloy-framework/alloy/@alloy-js/java@0f9a3a3",
+    "change-case": "~5.4.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.8",
