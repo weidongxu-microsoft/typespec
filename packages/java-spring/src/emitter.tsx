@@ -10,9 +10,6 @@ import {
   HttpOperation,
   HttpService,
 } from "@typespec/http";
-import fs from "node:fs";
-import { mkdir, rm, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
 import { emitOperations, emitServices, OperationsGroup } from "./common/index.js";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
@@ -77,8 +74,9 @@ export async function $onEmit(context: EmitContext) {
     {} as Record<string, OperationsGroup>
   );
 
-  const result = ay.render(
-    <ay.Output externals={[springFramework, javaUtil]}>
+  const outputDir = context.emitterOutputDir;
+  return (
+    <ay.Output externals={[springFramework, javaUtil]} basePath={outputDir}>
       <SpringProject name="TestProject" mavenProjectConfig={projectConfig}>
         <jv.PackageDirectory package="io.typespec.generated">
           <jv.SourceFile path="MainApplication.java">
@@ -106,8 +104,6 @@ export async function $onEmit(context: EmitContext) {
       </SpringProject>
     </ay.Output>
   );
-
-  await writeOutput(result, "./tsp-output", false);
 }
 
 // TODO: Only query types from operations, and recursively add referring types
@@ -153,23 +149,4 @@ function isNoEmit(type: Type): boolean {
   }
 
   return false;
-}
-
-// TODO: Use typespec library to emit files
-export async function writeOutput(
-  dir: ay.OutputDirectory,
-  rootDir: string,
-  clean: boolean = false
-) {
-  if (clean && fs.existsSync(rootDir)) await rm(rootDir, { recursive: true });
-
-  for (const item of dir.contents) {
-    if (item.kind === "file") {
-      const targetLocation = join(rootDir, item.path);
-      await mkdir(dirname(targetLocation), { recursive: true });
-      await writeFile(targetLocation, item.contents);
-    } else {
-      await writeOutput(item, rootDir);
-    }
-  }
 }
