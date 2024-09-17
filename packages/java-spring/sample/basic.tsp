@@ -9,14 +9,14 @@ namespace DemoService {
       id: int32;
       firstName: string;
       lastName: string;
-      special: T;
+      @header special: T;
       pets: Pets.Pet[];
     }
 
     @get op listPeople(@body sortBy?: string): Person<string>[];
 
     @route("/{id}")
-    @put op replacePerson(@header("NewPerson") person: Person<int32>, @path id: int32, @body name: string): Person<int32>;
+    @put op replacePerson(...Person<int32>): Person<int32>;
   }
 
   // This will generate a RestController for the /pets endpoint
