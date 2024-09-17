@@ -33,7 +33,7 @@ export const SpringAnnotations = new Map<string, Refkey>([
 
 export function collectAnnotations(op: HttpOperation) {
   
-  const route = <jv.Value value={op.verb}/>;
+  const route = op.verb;
   const path = <jv.Value value={op.uriTemplate}/>;
   
   const routeAnnotation = <SpringAnnotation annotationKind={route} annotationParameters={path}></SpringAnnotation>
