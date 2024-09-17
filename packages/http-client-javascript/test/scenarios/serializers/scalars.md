@@ -12,13 +12,18 @@ scalar MyUtcDate extends utcDateTime;
 scalar MyIsoDate extends utcDateTime;
 @encode("unixTimestamp", int32)
 scalar MyUnixDate extends utcDateTime;
+
+op foo(a: MyDate, b: MyUtcDate, c: MyIsoDate, d: MyUnixDate): void;
 ```
 
 ## TypeScript
 
 ```ts src/models/models.ts
 export type MyDate = Date;
+
 export type MyUtcDate = Date;
+
 export type MyIsoDate = Date;
+
 export type MyUnixDate = number;
 ```

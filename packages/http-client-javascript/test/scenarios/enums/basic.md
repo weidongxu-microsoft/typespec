@@ -8,6 +8,8 @@ enum Foo {
   two,
   three,
 }
+
+op foo(): Foo;
 ```
 
 ## TypeScript
@@ -32,16 +34,17 @@ enum Foo {
   two: "TWO",
   three: "THREE",
 }
+op foo(): Foo;
 ```
 
 ## TypeScript
 
 Should generate a type for a type with name `Foo`
 
-````ts src/models/models.ts
+```ts src/models/models.ts
 export enum Foo {
   one = "ONE",
   two = "TWO",
   three = "THREE",
-}```
-````
+}
+```
