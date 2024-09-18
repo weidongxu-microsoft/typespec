@@ -29,7 +29,6 @@ export function ModelConstructor(props: ModelConstructorProps) {
         ),
         { joiner: "\n" }
       )}
-      {props.children}
     </Constructor>
   );
 }

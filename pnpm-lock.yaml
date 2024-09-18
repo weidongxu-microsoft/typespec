@@ -890,6 +890,9 @@ importers:
       '@typespec/http':
         specifier: workspace:*
         version: link:../http
+      '@typespec/rest':
+        specifier: workspace:*
+        version: link:../rest
       change-case:
         specifier: ~5.4.4
         version: 5.4.4

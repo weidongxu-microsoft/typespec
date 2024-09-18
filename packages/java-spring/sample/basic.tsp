@@ -2,7 +2,6 @@ import "@typespec/http";
 using TypeSpec.Http;
 @service
 namespace DemoService {
-
   @route("/people")
   namespace People {
     model Person<T> {
@@ -17,7 +16,6 @@ namespace DemoService {
 
     @put op replacePerson(@bodyRoot person: Person<int32>): Person<int32>;
   }
-
 
   // This will generate a RestController for the /pets endpoint
   @route("/pets")

@@ -10,20 +10,22 @@
     "watch-src": "babel src -d dist/src --extensions .ts,.tsx --watch",
     "watch-tsc": "tsc -p . --watch",
     "watch": "concurrently --kill-others \"npm run watch-tsc\" \"npm run watch-src\"",
-    "test": "vitest run"
+    "test": "vitest run",
+    "format": "prettier --write ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "peerDependencies": {
-    "@typespec/compiler": "workspace:*"
+    "@typespec/compiler": "workspace:*",
+    "@typespec/http": "workspace:*",
+    "@typespec/rest": "workspace:*"
   },
   "dependencies": {
     "@alloy-js/core": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@010db0c",
     "@alloy-js/java": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/java@010db0c",
     "@typespec/emitter-framework": "workspace:*",
-    "@typespec/http": "workspace:*",
     "change-case": "~5.4.4"
   },
   "devDependencies": {

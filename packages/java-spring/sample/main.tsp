@@ -10,10 +10,9 @@ namespace People {
 }
 
 namespace Pets {
-    model Pet {
+  model Pet {
     name: string;
     owner?: People.Person<int32>;
   }
   op listPets(): Pet[];
 }
-

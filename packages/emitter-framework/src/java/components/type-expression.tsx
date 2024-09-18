@@ -1,6 +1,7 @@
 import { code, refkey } from "@alloy-js/core";
 import { Generics, javaUtil, Value } from "@alloy-js/java";
 import { IntrinsicType, Scalar, Type } from "@typespec/compiler";
+import { $ } from "@typespec/compiler/typekit";
 import { isArray } from "../../core/index.js";
 
 export interface TypeExpressionProps {
@@ -72,15 +73,33 @@ export const intrinsicNameToJavaType = new Map<string, string>([
 ]);
 
 function getScalarIntrinsicExpression(type: Scalar | IntrinsicType): string {
-  if (type.kind === "Scalar" && type.baseScalar && type.namespace?.name !== "TypeSpec") {
-    // This is a delcared scalar
-    throw new Error("Declared scalar not implemented");
-    // return <Reference refkey={type} />;
+  let intrinsicName: string;
+  if ($.scalar.is(type)) {
+    if ($.scalar.isUtcDateTime(type) || $.scalar.extendsUtcDateTime(type)) {
+      const encoding = $.scalar.getEncoding(type);
+      let emittedType = "Date";
+      switch (encoding?.encoding) {
+        case "unixTimestamp":
+          emittedType = "number";
+          break;
+        case "rfc7231":
+        case "rfc3339":
+        default:
+          emittedType = `Date`;
+          break;
+      }
+
+      return emittedType;
+    }
+
+    intrinsicName = $.scalar.getStdBase(type)?.name ?? "";
+  } else {
+    intrinsicName = type.name;
   }
 
-  const javaType = intrinsicNameToJavaType.get(type.name);
+  const javaType = intrinsicNameToJavaType.get(intrinsicName);
   if (!javaType) {
-    throw new Error(`Unknown scalar type ${type.name}`);
+    throw new Error(`Unknown scalar type ${intrinsicName}`);
   }
   return javaType;
 }

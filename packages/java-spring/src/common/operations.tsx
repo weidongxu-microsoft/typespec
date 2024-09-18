@@ -4,8 +4,8 @@ import { EmitContext } from "@typespec/compiler";
 import { TypeExpression } from "@typespec/emitter-framework/java";
 import { getRoutePath, HttpOperation, OperationContainer } from "@typespec/http";
 import { RestController } from "../spring/components/index.js";
-import { springFramework } from "../spring/libraries/index.js";
 import { SpringServiceEndpoint } from "../spring/components/spring-service-endpoint.js";
+import { springFramework } from "../spring/libraries/index.js";
 
 export interface OperationsGroup {
   container?: OperationContainer;
@@ -31,34 +31,36 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
 
         // TODO: Oncall RouteHandler that takes HttpOperation type. Can query everything off that to construct the route handler
         return (
-          <RestController name={nsOps.container?.name} routePath={routePath}>
-            <jv.Variable
-              private
-              final
-              type={refkey(`${nsOps.container?.name}Service`)}
-              name={serviceAccessor}
-            />
+          <jv.SourceFile path={`${nsOps.container?.name}Controller.java`}>
+            <RestController container={nsOps.container}>
+              <jv.Variable
+                private
+                final
+                type={refkey(`${nsOps.container?.name}Service`)}
+                name={serviceAccessor}
+              />
 
-            <jv.Annotation type={springFramework.Autowired} />
-            <jv.Constructor
-              public
-              parameters={{
-                [serviceAccessor]: refkey(`${nsOps.container?.name}Service`),
-              }}
-            >
-              this.{serviceAccessor} = {serviceAccessor};
-            </jv.Constructor>
+              <jv.Annotation type={springFramework.Autowired} />
+              <jv.Constructor
+                public
+                parameters={{
+                  [serviceAccessor]: refkey(`${nsOps.container?.name}Service`),
+                }}
+              >
+                this.{serviceAccessor} = {serviceAccessor};
+              </jv.Constructor>
 
-            {nsOps.operations.map((op) => {
-              return (
-                <>
-                  <SpringServiceEndpoint op={op}>
-                    return {serviceAccessor}.{op.operation?.name}();
-                  </SpringServiceEndpoint>
-                </>
-              );
-            })}
-          </RestController>
+              {nsOps.operations.map((op) => {
+                return (
+                  <>
+                    <SpringServiceEndpoint op={op}>
+                      return {serviceAccessor}.{op.operation?.name}();
+                    </SpringServiceEndpoint>
+                  </>
+                );
+              })}
+            </RestController>
+          </jv.SourceFile>
         );
       })}
     </>

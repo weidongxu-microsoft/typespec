@@ -13,7 +13,6 @@ import {
 import { emitOperations, emitServices, OperationsGroup } from "./common/index.js";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
-import { SpringServiceEndpoint } from "./spring/components/spring-service-endpoint.js";
 
 const RestNamespace = "TypeSpec.Rest";
 
