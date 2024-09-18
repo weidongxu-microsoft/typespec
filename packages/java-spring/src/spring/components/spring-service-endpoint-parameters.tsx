@@ -1,35 +1,48 @@
 import { $ } from "@typespec/compiler/typekit";
 import * as jv from "@alloy-js/java"
-import { HttpOperation } from "@typespec/http";
+import {
+  HeaderFieldOptions,
+  HttpBody,
+  HttpOperation, HttpOperationBody,
+  PathParameterOptions,
+  QueryParameterOptions,
+} from "@typespec/http";
 import { SpringAnnotation } from "./annotations.js";
 import { TypeExpression } from "@typespec/emitter-framework/java";
 
 
-export interface SpringServiceEndpointParametersProps {
-  op: HttpOperation;
-}
-
 export function SpringEndpointParameters(op: HttpOperation) {
-  const bodyParams = $.httpRequest.getBodyParameters(op);
+  const bodyParams = op.parameters.body;
   const headerParams = $.httpRequest.getParameters(op, "header");
   const pathParams = $.httpRequest.getParameters(op,  "path");
+  const queryParams = $.httpRequest.getParameters(op,  "query");
 
   const paramRecord: Record<string, string> = {};
 
-  if (bodyParams) {
-    for (const bodyParam of bodyParams.properties.values()) {
-      console.log(bodyParam);
-      paramRecord[bodyParam.name] = <><SpringAnnotation annotationKind={"body"}/> <TypeExpression type={bodyParam}></TypeExpression></>;
-    }
+  if (bodyParams && bodyParams.property) {
+    const name = bodyParams.property?.name ?? "" ;
+    const annotation = <SpringAnnotation annotationKind={"body"}/>
+    paramRecord[name] = <>{annotation} <TypeExpression type={bodyParams.property}/></>
   }
   if (headerParams) {
     for (const headerParam of headerParams.properties.values()) {
-      paramRecord[headerParam.name] = <><SpringAnnotation annotationKind={"header"}/> <TypeExpression type={headerParam}></TypeExpression></>;
+      const options = $.modelProperty.getHttpParamOptions(headerParam) as HeaderFieldOptions;
+      const annotation = <SpringAnnotation annotationKind={"header"} annotationParameters={options.name}/>
+      paramRecord[headerParam.name] = <>{annotation} <TypeExpression type={headerParam}></TypeExpression></>;
     }
   }
   if (pathParams) {
-    for (const urlParam of pathParams.properties.values()) {
-      paramRecord[urlParam.name] = <><SpringAnnotation annotationKind={"path"}/> <TypeExpression type={urlParam}></TypeExpression></>;
+    for (const pathParam of pathParams.properties.values()) {
+      const options = $.modelProperty.getHttpParamOptions(pathParam) as PathParameterOptions;
+      const annotation = <SpringAnnotation annotationKind={"path"} annotationParameters={options.name}/>
+      paramRecord[pathParam.name] = <>{annotation} <TypeExpression type={pathParam}></TypeExpression></>;
+    }
+  }
+  if (queryParams) {
+    for (const queryParam of queryParams.properties.values()) {
+      const options = $.modelProperty.getHttpParamOptions(queryParam) as QueryParameterOptions;
+      const annotation = <SpringAnnotation annotationKind={"query"} annotationParameters={options.name}/>
+      paramRecord[queryParam.name] = <>{annotation} <TypeExpression type={queryParam}></TypeExpression></>;
     }
   }
   return paramRecord;
