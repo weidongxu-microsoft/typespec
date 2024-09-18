@@ -15,7 +15,7 @@ namespace DemoService {
 
     @get op listPeople(@body sortBy?: string): Person<string>[];
 
-    @put op replacePerson(@body person: Person<int32>): Person<int32>;
+    @put op replacePerson(@bodyRoot person: Person<int32>): Person<int32>;
   }
 
 
