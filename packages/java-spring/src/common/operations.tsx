@@ -5,6 +5,7 @@ import { TypeExpression } from "@typespec/emitter-framework/java";
 import { getRoutePath, HttpOperation, OperationContainer } from "@typespec/http";
 import { RestController } from "../spring/components/index.js";
 import { springFramework } from "../spring/libraries/index.js";
+import { SpringServiceEndpoint } from "../spring/components/spring-service-endpoint.js";
 
 export interface OperationsGroup {
   container?: OperationContainer;
@@ -51,10 +52,9 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
             {nsOps.operations.map((op) => {
               return (
                 <>
-                  <jv.Annotation type={springFramework.GetMapping} />
-                  <jv.Method public return="String" name={op.operation?.name}>
+                  <SpringServiceEndpoint op={op}>
                     return {serviceAccessor}.{op.operation?.name}();
-                  </jv.Method>
+                  </SpringServiceEndpoint>
                 </>
               );
             })}

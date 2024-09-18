@@ -6,14 +6,18 @@ namespace DemoService {
   @route("/people")
   namespace People {
     model Person<T> {
-      firstName: string;
-      lastName: string;
+      @path id: int32;
+      @header firstName: string;
       special: T;
+      @header lastName: string;
       pets: Pets.Pet[];
     }
 
-    op listPeople(@query sortBy?: string, @body person: Person<string>): Person<string>[];
+    @get op listPeople(@body sortBy?: string): Person<string>[];
+
+    @put op replacePerson(@bodyRoot person: Person<int32>): Person<int32>;
   }
+
 
   // This will generate a RestController for the /pets endpoint
   @route("/pets")
