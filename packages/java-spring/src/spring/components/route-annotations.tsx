@@ -8,17 +8,17 @@ export interface AnnotationsProps {
   annotationParameters?: string;
 }
 
-export function SpringAnnotation({annotationKind, annotationParameters}: AnnotationsProps) {
-  const kind = SpringAnnotations.get(annotationKind);
+export function SpringRouteAnnotation({annotationKind, annotationParameters}: AnnotationsProps) {
+  const kind = springAnnotations.get(annotationKind);
   if (annotationParameters) {
     const valueRecord: Record<string, Child> = {"" : annotationParameters};
-    return <jv.Annotation type={kind} value={valueRecord}></jv.Annotation>
+    return <jv.Annotation type={kind} value={valueRecord}/>
   }
-  return <jv.Annotation type={kind}></jv.Annotation>
+  return <jv.Annotation type={kind}/>
 }
 
 
-export const SpringAnnotations = new Map<string, Refkey>([
+export const springAnnotations = new Map<string, Refkey>([
   ["get", springFramework.GetMapping],
   ["put", springFramework.PutMapping],
   ["delete", springFramework.DeleteMapping],
