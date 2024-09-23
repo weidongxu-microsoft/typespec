@@ -1,5 +1,5 @@
 import { Children, refkey as getRefkey, mapJoin } from "@alloy-js/core";
-import { Class, useJavaNamePolicy } from "@alloy-js/java";
+import { Class, Constructor, useJavaNamePolicy } from "@alloy-js/java";
 import { Model, ModelProperty } from "@typespec/compiler";
 import { getTemplateParams } from "../utils.js";
 import { Getter } from "./getter.js";
@@ -45,6 +45,8 @@ export function ModelDeclaration({
         },
         { joiner: "\n" }
       )}
+
+      <Constructor public />
 
       <ModelConstructor type={type} />
 
