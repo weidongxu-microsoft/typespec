@@ -1,5 +1,6 @@
 import { Children } from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
+import { TypeExpression } from "@typespec/emitter-framework/java";
 import { HttpOperation } from "@typespec/http";
 import { SpringRouteAnnotation } from "./route-annotations.js";
 import { SpringEndpointParameters } from "./spring-service-endpoint-parameters.js";
@@ -16,14 +17,20 @@ export function SpringServiceEndpoint({ op, children }: SpringServiceEndpointPro
     <SpringRouteAnnotation annotationKind={route} annotationParameters={path} />
   );
 
+  const responseModel = op.responses[0].type;
+
   const springParams = SpringEndpointParameters(op);
   return (
     <>
-      <>{routeAnnotation}</>
-      <jv.Method name={op.operation.name} parameters={springParams}>
+      {routeAnnotation}
+      <jv.Method
+        public
+        name={op.operation.name}
+        parameters={springParams}
+        return={<TypeExpression type={responseModel} />}
+      >
         {children}
       </jv.Method>
-      <>{`\n`}</>
     </>
   );
 }

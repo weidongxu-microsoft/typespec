@@ -1,6 +1,7 @@
 import { Child, mapJoin, refkey } from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
-import { EmitContext } from "@typespec/compiler";
+import { useJavaNamePolicy } from "@alloy-js/java";
+import { $, EmitContext, ModelProperty } from "@typespec/compiler";
 import { TypeExpression } from "@typespec/emitter-framework/java";
 import { getRoutePath, HttpOperation, OperationContainer } from "@typespec/http";
 import { RestController } from "../spring/components/index.js";
@@ -29,7 +30,6 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
 
         const serviceAccessor = nsOps.container?.name.toLowerCase() + "Service";
 
-        // TODO: Oncall RouteHandler that takes HttpOperation type. Can query everything off that to construct the route handler
         return (
           <jv.SourceFile path={`${nsOps.container?.name}Controller.java`}>
             <RestController container={nsOps.container}>
@@ -50,15 +50,50 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
                 this.{serviceAccessor} = {serviceAccessor};
               </jv.Constructor>
 
-              {nsOps.operations.map((op) => {
-                return (
-                  <>
-                    <SpringServiceEndpoint op={op}>
-                      return {serviceAccessor}.{op.operation?.name}();
-                    </SpringServiceEndpoint>
-                  </>
-                );
-              })}
+              {mapJoin(
+                nsOps.operations,
+                (op) => {
+                  // Build names for params, to pass to service call
+                  const bodyParams = op.parameters.body;
+                  const headerParams = $.httpRequest.getParameters(op, "header");
+                  const pathParams = $.httpRequest.getParameters(op, "path");
+                  const queryParams = $.httpRequest.getParameters(op, "query");
+
+                  const paramNames: string[] = [];
+
+                  // Request body
+                  if (bodyParams && bodyParams.property) {
+                    paramNames.push(bodyParams.property.name);
+                  }
+
+                  if (headerParams) {
+                    for (const prop of headerParams.properties.values()) {
+                      paramNames.push(prop.name);
+                    }
+                  }
+
+                  if (pathParams) {
+                    for (const prop of pathParams.properties.values()) {
+                      paramNames.push(prop.name);
+                    }
+                  }
+
+                  if (queryParams) {
+                    for (const prop of queryParams.properties.values()) {
+                      paramNames.push(prop.name);
+                    }
+                  }
+
+                  return (
+                    <>
+                      <SpringServiceEndpoint op={op}>
+                        return {serviceAccessor}.{op.operation?.name}({paramNames.join(", ")});
+                      </SpringServiceEndpoint>
+                    </>
+                  );
+                },
+                { joiner: "\n\n" }
+              )}
             </RestController>
           </jv.SourceFile>
         );
@@ -88,20 +123,50 @@ export function emitServices(context: EmitContext, ops: Record<string, Operation
                   (op) => {
                     // Generated function will take parameters that are passed to endpoint (combination of query, body, path variable etc)
                     // Return type will be return type of operation
+                    const namePolicy = useJavaNamePolicy();
 
                     const responseModel = op.responses[0].type;
 
+                    const bodyParams = op.parameters.body;
+                    const headerParams = $.httpRequest.getParameters(op, "header");
+                    const pathParams = $.httpRequest.getParameters(op, "path");
+                    const queryParams = $.httpRequest.getParameters(op, "query");
+
                     // Parameters (query, path, and headers)
                     const params: Record<string, Child> = {};
-                    op.parameters.parameters.forEach((param) => {
-                      params[param.name] = <TypeExpression type={param.param} />;
-                    });
 
                     // Request body
-                    const body = op.parameters.body?.type;
-                    if (body !== undefined) {
-                      params["body"] = <TypeExpression type={body} />;
+                    if (bodyParams && bodyParams.property) {
+                      params[bodyParams?.property?.name ?? "body"] = (
+                        <TypeExpression type={bodyParams.property} />
+                      );
                     }
+
+                    const modelProperties: ModelProperty[] = [];
+
+                    if (headerParams) {
+                      for (const prop of headerParams.properties.values()) {
+                        modelProperties.push(prop);
+                      }
+                    }
+
+                    if (pathParams) {
+                      for (const prop of pathParams.properties.values()) {
+                        modelProperties.push(prop);
+                      }
+                    }
+
+                    if (queryParams) {
+                      for (const prop of queryParams.properties.values()) {
+                        modelProperties.push(prop);
+                      }
+                    }
+
+                    modelProperties.forEach((param) => {
+                      params[namePolicy.getName(param.name, "parameter")] = (
+                        <TypeExpression type={param} />
+                      );
+                    });
 
                     return (
                       <jv.Method
