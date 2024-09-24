@@ -57,6 +57,7 @@ export function SpringEndpointParameters(op: HttpOperation) {
   if (queryParams) {
     for (const queryParam of queryParams.properties.values()) {
       const options = $.modelProperty.getHttpParamOptions(queryParam) as QueryParameterOptions;
+      const optional = queryParam.optional;
       const optionValue = <jv.Value value={options.name} />;
       const annotation = (
         <SpringRouteAnnotation annotationKind={"query"} annotationParameters={optionValue} />

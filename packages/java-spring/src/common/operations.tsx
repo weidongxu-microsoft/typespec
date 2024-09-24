@@ -7,6 +7,7 @@ import { getRoutePath, HttpOperation, OperationContainer } from "@typespec/http"
 import { RestController } from "../spring/components/index.js";
 import { SpringServiceEndpoint } from "../spring/components/spring-service-endpoint.js";
 import { springFramework } from "../spring/libraries/index.js";
+import { getResponseTypeExpression } from "../spring/utils.js";
 
 export interface OperationsGroup {
   container?: OperationContainer;
@@ -171,7 +172,7 @@ export function emitServices(context: EmitContext, ops: Record<string, Operation
                     return (
                       <jv.Method
                         name={op.operation?.name}
-                        return={<TypeExpression type={responseModel} />}
+                        return={getResponseTypeExpression(op)}
                         parameters={params}
                       />
                     );
