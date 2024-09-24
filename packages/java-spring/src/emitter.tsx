@@ -74,6 +74,20 @@ export async function $onEmit(context: EmitContext) {
     {} as Record<string, OperationsGroup>
   );
 
+  // Query http operations for response models, and emit them
+  Object.values(httpOperations).forEach((group) => {
+    group.operations.forEach((op) => {
+      const responseModels = op.responses.map((res) => res.type);
+      responseModels.forEach((model) => {
+        if (isNoEmit(model)) {
+          return;
+        }
+
+        types.dataTypes.push(model);
+      });
+    });
+  });
+
   const outputDir = context.emitterOutputDir;
   return (
     <ay.Output externals={[springFramework, javaUtil]} basePath={outputDir}>
@@ -127,7 +141,7 @@ function queryTypes(context: EmitContext) {
   return { dataTypes: [...types] };
 }
 
-function isNoEmit(type: Type): boolean {
+export function isNoEmit(type: Type): boolean {
   // Skip anonymous types
   if (!(type as any).name) {
     return true;

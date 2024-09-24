@@ -19,7 +19,7 @@ namespace DemoService {
     }
 
     @get op listPeople(): Person<string>[] | Error;
-    @post op createPerson(@body person: Person<string>): Person<string>;
+    @post op createPerson(@body person: Person<string>): OkResponse;
     @put op replacePerson(@bodyRoot person: Person<string>): Person<string>;
   }
 

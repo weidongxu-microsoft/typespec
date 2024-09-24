@@ -1,3 +1,4 @@
+import { Child } from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { $ } from "@typespec/compiler/typekit";
 import { TypeExpression } from "@typespec/emitter-framework/java";
@@ -19,7 +20,7 @@ export function SpringEndpointParameters(op: HttpOperation) {
 
   if (bodyParams && bodyParams.property) {
     const name = bodyParams.property?.name ?? "";
-    const annotation = <SpringRouteAnnotation annotationKind={"body"} />;
+    const annotation = <SpringRouteAnnotation kind="body" />;
     paramRecord[name] = (
       <>
         {annotation} <TypeExpression type={bodyParams.property} />
@@ -30,9 +31,7 @@ export function SpringEndpointParameters(op: HttpOperation) {
     for (const headerParam of headerParams.properties.values()) {
       const options = $.modelProperty.getHttpParamOptions(headerParam) as HeaderFieldOptions;
       const optionValue = <jv.Value value={options.name} />;
-      const annotation = (
-        <SpringRouteAnnotation annotationKind={"header"} annotationParameters={optionValue} />
-      );
+      const annotation = <SpringRouteAnnotation kind="header" parameters={{ "": optionValue }} />;
       paramRecord[headerParam.name] = (
         <>
           {annotation} <TypeExpression type={headerParam} />
@@ -43,10 +42,14 @@ export function SpringEndpointParameters(op: HttpOperation) {
   if (pathParams) {
     for (const pathParam of pathParams.properties.values()) {
       const options = $.modelProperty.getHttpParamOptions(pathParam) as PathParameterOptions;
+      const optional = pathParam.optional;
       const optionValue = <jv.Value value={options.name} />;
-      const annotation = (
-        <SpringRouteAnnotation annotationKind={"path"} annotationParameters={optionValue} />
-      );
+      const annotationParams: Record<string, Child> = { name: optionValue };
+      if (optional) {
+        annotationParams.required = <jv.Value value={false} />;
+      }
+      const annotation = <SpringRouteAnnotation kind={"query"} parameters={annotationParams} />;
+
       paramRecord[pathParam.name] = (
         <>
           {annotation} <TypeExpression type={pathParam} />
@@ -59,9 +62,12 @@ export function SpringEndpointParameters(op: HttpOperation) {
       const options = $.modelProperty.getHttpParamOptions(queryParam) as QueryParameterOptions;
       const optional = queryParam.optional;
       const optionValue = <jv.Value value={options.name} />;
-      const annotation = (
-        <SpringRouteAnnotation annotationKind={"query"} annotationParameters={optionValue} />
-      );
+      const annotationParams: Record<string, Child> = { name: optionValue };
+      if (optional) {
+        annotationParams.required = <jv.Value value={false} />;
+      }
+      const annotation = <SpringRouteAnnotation kind={"query"} parameters={annotationParams} />;
+
       paramRecord[queryParam.name] = (
         <>
           {annotation} <TypeExpression type={queryParam} />

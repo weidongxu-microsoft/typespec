@@ -14,9 +14,7 @@ export function SpringServiceEndpoint({ op, children }: SpringServiceEndpointPro
   const route = op.verb;
   const path = <jv.Value value={op.path} />;
 
-  const routeAnnotation = (
-    <SpringRouteAnnotation annotationKind={route} annotationParameters={path} />
-  );
+  const routeAnnotation = <SpringRouteAnnotation kind={route} parameters={{ "": path }} />;
 
   const springParams = SpringEndpointParameters(op);
   return (
