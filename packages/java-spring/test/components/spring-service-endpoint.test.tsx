@@ -1,9 +1,10 @@
 import { d } from "@alloy-js/core/testing";
-import { Operation } from "@typespec/compiler";
+import { Model, Namespace, Operation } from "@typespec/compiler";
 import { $ } from "@typespec/compiler/typekit"
 import { expect, it } from "vitest";
 import { getEmitOutput } from "../utils.js";
 import { SpringServiceEndpoint } from "../../src/spring/components/spring-service-endpoint.js";
+import { ModelDeclaration } from "@typespec/emitter-framework/java";
 
 it("Creates get service", async () => {
   const code = `
@@ -170,6 +171,7 @@ it("Creates service with path parameter from the path", async () => {
 
   const output = await getEmitOutput(code, (program) => {
     const Foo = program.resolveTypeReference("listPeople")[0]! as Operation;
+
     const Bar = $.httpOperation.get(Foo);
     return <SpringServiceEndpoint op={Bar} />;
   });
@@ -205,5 +207,47 @@ it("Creates service with query parameter", async () => {
 
       @GetMapping("/people")
       public void listPeople(@RequestParam("name") String name);
+  `);
+});
+
+it("Creates service with declared model parameter", async () => {
+  const code = `
+      namespace People {
+        model Person {
+          @path id: int32;
+          @header firstName: string;
+          lastName: string;
+        }
+        
+        @route("/people")
+        op listPeople(@bodyRoot person: Person): Person;
+      }
+  `;
+
+  const output = await getEmitOutput(code, (program) => {
+    const Foo = program.resolveTypeReference("People")[0]! as Namespace;
+    const op = Foo.operations.get("listPeople");
+    const model = Foo.models.get("Person")
+    //console.log("op", op);
+    if (!op || !model) {
+      throw new Error("Operation or model not found in Foo.operations.");
+    }
+
+    const httpOp = $.httpOperation.get(op);
+    return <><SpringServiceEndpoint op={httpOp} /><ModelDeclaration type={model}></ModelDeclaration></>;
+  });
+
+  expect(output).toBe(d`
+      package me.test.code;
+      
+      import org.springframework.web.bind.annotation.GetMapping;
+      import org.springframework.web.bind.annotation.RequestBody;
+      import org.springframework.web.bind.annotation.RequestHeader;
+      import org.springframework.web.bind.annotation.PathVariable;
+
+
+
+      @GetMapping("/people")
+      public Person replacePerson(@RequestBody Person person, @RequestHeader("first-name") String firstName, @PathVariable("id") Integer id);
   `);
 });
