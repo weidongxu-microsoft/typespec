@@ -2,9 +2,10 @@ import { d } from "@alloy-js/core/testing";
 import { Model, Namespace, Operation } from "@typespec/compiler";
 import { $ } from "@typespec/compiler/typekit"
 import { expect, it } from "vitest";
-import { getEmitOutput } from "../utils.js";
+import { findEmittedFile, getEmitOutput } from "../utils.js";
 import { SpringServiceEndpoint } from "../../src/spring/components/spring-service-endpoint.js";
 import { ModelDeclaration } from "@typespec/emitter-framework/java";
+import { createJavaSpringTestRunner, emit } from "../test-host.js";
 
 it("Creates get service", async () => {
   const code = `
@@ -212,42 +213,55 @@ it("Creates service with query parameter", async () => {
 
 it("Creates service with declared model parameter", async () => {
   const code = `
+    @service
+    namespace DemoService {
+      @route("/people")
       namespace People {
         model Person {
           @path id: int32;
           @header firstName: string;
           lastName: string;
         }
-        
-        @route("/people")
-        op listPeople(@bodyRoot person: Person): Person;
+    
+        @put op replacePerson(@bodyRoot person: Person): Person;
       }
+    }
   `;
 
-  const output = await getEmitOutput(code, (program) => {
-    const Foo = program.resolveTypeReference("People")[0]! as Namespace;
-    const op = Foo.operations.get("listPeople");
-    const model = Foo.models.get("Person")
-    //console.log("op", op);
-    if (!op || !model) {
-      throw new Error("Operation or model not found in Foo.operations.");
-    }
 
-    const httpOp = $.httpOperation.get(op);
-    return <><SpringServiceEndpoint op={httpOp} /><ModelDeclaration type={model}></ModelDeclaration></>;
-  });
 
-  expect(output).toBe(d`
-      package me.test.code;
+  const output = await emit(code);
+  const testFile = findEmittedFile(output, "PeopleController");
+  console.log(output);
+  //const file = findEmittedFile(output, "")
+
+  expect(testFile).toBe(d`
+    package io.typespec.generated.controllers;
+    
+    import org.springframework.web.bind.annotation.RestController;
+    import org.springframework.web.bind.annotation.RequestMapping;
+    import io.typespec.generated.services.PeopleService;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.web.bind.annotation.PutMapping;
+    import io.typespec.generated.models.Person;
+    import org.springframework.web.bind.annotation.RequestBody;
+    import org.springframework.web.bind.annotation.RequestHeader;
+    import org.springframework.web.bind.annotation.PathVariable;
+
+    @RestController
+    @RequestMapping("/people")
+    public class PeopleController {
+      private final PeopleService peopleService;
       
-      import org.springframework.web.bind.annotation.GetMapping;
-      import org.springframework.web.bind.annotation.RequestBody;
-      import org.springframework.web.bind.annotation.RequestHeader;
-      import org.springframework.web.bind.annotation.PathVariable;
-
-
-
-      @GetMapping("/people")
-      public Person replacePerson(@RequestBody Person person, @RequestHeader("first-name") String firstName, @PathVariable("id") Integer id);
+      @Autowired
+      public PeopleController(PeopleService peopleService) {
+        this.peopleService = peopleService;
+      }
+      
+      @PutMapping("/people/{id}")
+      public Person replacePerson(@RequestBody Person person, @RequestHeader("first-name") String firstName, @PathVariable("id") Integer id) {
+        return peopleService.replacePerson(person, firstName, id);
+      }
+    }
   `);
 });
