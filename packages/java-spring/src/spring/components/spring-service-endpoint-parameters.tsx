@@ -48,7 +48,7 @@ export function SpringEndpointParameters(op: HttpOperation) {
       if (optional) {
         annotationParams.required = <jv.Value value={false} />;
       }
-      const annotation = <SpringRouteAnnotation kind={"query"} parameters={annotationParams} />;
+      const annotation = <SpringRouteAnnotation kind="path" parameters={annotationParams} />;
 
       paramRecord[pathParam.name] = (
         <>
@@ -66,7 +66,7 @@ export function SpringEndpointParameters(op: HttpOperation) {
       if (optional) {
         annotationParams.required = <jv.Value value={false} />;
       }
-      const annotation = <SpringRouteAnnotation kind={"query"} parameters={annotationParams} />;
+      const annotation = <SpringRouteAnnotation kind="query" parameters={annotationParams} />;
 
       paramRecord[queryParam.name] = (
         <>

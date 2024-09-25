@@ -14,13 +14,15 @@ namespace DemoService {
 
     @error
     model Error {
+      @statusCode _: 400;
       code: int32;
       message: string;
     }
 
+    @get op getPerson(@path id: int32): Person<string> | NotFoundResponse | Error;
     @get op listPeople(): Person<string>[] | Error;
-    @post op createPerson(@body person: Person<string>): OkResponse;
-    @put op replacePerson(@bodyRoot person: Person<string>): Person<string>;
+    @post op createPerson(@body person: Person<string>): CreatedResponse | Error;
+    @put op replacePerson(@bodyRoot person: Person<string>): OkResponse | Error;
   }
 
   @route("/pets")

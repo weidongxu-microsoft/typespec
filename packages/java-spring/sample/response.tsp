@@ -52,7 +52,7 @@ model PetId {
 namespace Pets {
   @doc("Delete a pet.")
   @delete
-  op delete(...PetId): OkResponse | Error;
+  op delete(...PetId): OkResponse | NoContentResponse | Error;
 
   op list(@query nextLink?: string): ResponsePage<Pet> | Error;
 
