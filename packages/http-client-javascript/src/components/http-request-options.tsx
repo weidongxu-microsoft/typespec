@@ -1,9 +1,9 @@
 import { Children, code, Refkey } from "@alloy-js/core";
 import * as ts from "@alloy-js/typescript";
-import { getEffectiveModelType, Model, Operation, Type } from "@typespec/compiler";
+import { Operation } from "@typespec/compiler";
 import { $ } from "@typespec/compiler/typekit";
-import { HttpRequestParametersExpression } from "./http-request-parameters-expression.jsx";
 import * as ef from "@typespec/emitter-framework/typescript";
+import { HttpRequestParametersExpression } from "./http-request-parameters-expression.jsx";
 
 export interface HttpRequestOptionsProps {
   operation: Operation;
@@ -19,7 +19,7 @@ export function HttpRequestOptions(props: HttpRequestOptionsProps) {
       <HttpRequestOptions.Headers operation={props.operation} />
       <HttpRequestOptions.Body operation={props.operation} />
     </ts.ObjectExpression>
-  </ts.VarDeclaration>
+  </ts.VarDeclaration>;
 }
 
 export interface HttpRequestOptionsHeadersProps {
@@ -27,16 +27,28 @@ export interface HttpRequestOptionsHeadersProps {
   children?: Children;
 }
 
-HttpRequestOptions.Headers = function HttpRequestOptionsHeaders(props: HttpRequestOptionsHeadersProps) {
+HttpRequestOptions.Headers = function HttpRequestOptionsHeaders(
+  props: HttpRequestOptionsHeadersProps,
+) {
+  // Extract the header request parameters from the operation
   const httpOperation = $.httpOperation.get(props.operation);
   const headers = $.httpRequest.getParameters(httpOperation, "header");
 
-  const contentTypeProperty = $.httpRequest.getParameters(httpOperation, "contentType")?.properties.get("contentType");
-  let contentType = $.httpRequest.getBodyParameters(httpOperation) ? <ts.ObjectProperty name='"Content-Type"' value='"application/json"' /> : null;
+  // Prepare the default content type, to use in case no explicit content type is provided
+  let contentType = $.httpRequest.getBodyParameters(httpOperation) ? (
+    <ts.ObjectProperty name='"Content-Type"' value='"application/json"' />
+  ) : null;
 
-  if(contentTypeProperty) {
+  // Extract the content type property from the header request parameters, if available
+  const contentTypeProperty = $.httpRequest
+    .getParameters(httpOperation, "contentType")
+    ?.properties.get("contentType");
+
+  // If the content type property is available, use it to set the content type header.
+  if (contentTypeProperty) {
     let contentTypePath = "contentType";
     contentTypePath = contentTypeProperty.optional ? `options.${contentTypePath}` : contentTypePath;
+    // Override the default content type
     contentType = <ts.ObjectProperty name='"Content-Type"' value={contentTypePath} />;
   }
 
@@ -44,8 +56,8 @@ HttpRequestOptions.Headers = function HttpRequestOptionsHeaders(props: HttpReque
       <HttpRequestParametersExpression parameters={headers}>
         {contentType}
       </HttpRequestParametersExpression>,
-  </ts.ObjectProperty>
-}
+  </ts.ObjectProperty>;
+};
 
 export interface HttpRequestOptionsBodyProps {
   operation: Operation;
@@ -55,27 +67,22 @@ export interface HttpRequestOptionsBodyProps {
 
 HttpRequestOptions.Body = function HttpRequestOptionsBody(props: HttpRequestOptionsBodyProps) {
   const httpOperation = $.httpOperation.get(props.operation);
-  const body = httpOperation.parameters.body;
-  
-  if(!body) {
-  return <></>;
+  const body = $.httpRequest.getParameters(httpOperation, "body");
+  // If @body or @bodyRoot was used then collapse a model with a single property to that property type.
+  const collapse = $.httpRequest.body.isExplicit(httpOperation);
+
+  if (!body) {
+    return <></>;
   }
 
-  const namePolicy = ts.useTSNamePolicy();
+  // The transformer to apply to the body.
+  const bodyTransform =
+    <ef.TypeTransformCall type={body} target="transport" collapse={collapse} optionsBagName="options"/>;
 
-  let bodyName = props.itemName ?? body.property?.name ?? "";
-  let modelType: Type;
-  if(body.type.kind === "Model") {
-    modelType = getEffectiveModelType($.program, body.type as Model);
-    bodyName ??= $.type.getPlausibleName(modelType)
-  } else {
-    modelType = body.property!.type;
-  }
-
-  const bodyTransform = <ef.TypeTransformCall type={modelType} target="transport" itemName={namePolicy.getName(bodyName, "parameter")}/>;
-  return <><ts.ObjectProperty name="body" value={<JSONSerializer>{bodyTransform}</JSONSerializer>} />,</>;
-}
-
+  return <>
+    <ts.ObjectProperty name="body" value={<JSONSerializer>{bodyTransform}</JSONSerializer>} />,
+    </>;
+};
 
 export function JSONSerializer(props: { children?: Children }) {
   return code`JSON.stringify(${props.children})`;

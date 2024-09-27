@@ -1,44 +1,75 @@
-import { mapJoin, refkey } from "@alloy-js/core";
+import { Children, mapJoin, refkey, SourceDirectory } from "@alloy-js/core";
 import * as ts from "@alloy-js/typescript";
-import { Operation, Service, Type } from "@typespec/compiler";
-import {FunctionDeclaration, TypeExpression} from "@typespec/emitter-framework/typescript";
-import {getClientContextRefkey} from "./client-context.js"
+import { Operation, Service } from "@typespec/compiler";
+import { $ } from "@typespec/compiler/typekit";
+import { FunctionDeclaration, TypeExpression } from "@typespec/emitter-framework/typescript";
+import { prepareOperation } from "../utils/operations.js";
+import { ClientContextRefkey } from "./client-context.jsx";
 import { HttpRequest } from "./http-request.js";
 import { HttpResponse } from "./http-response.jsx";
-import { $ } from "@typespec/compiler/typekit";
+
+export interface OperationsProps {
+  operations: Map<string, Operation[]>;
+  service?: Service;
+}
+
+export function Operations(props: OperationsProps) {
+  const namePolicy = ts.createTSNamePolicy();
+  return mapJoin(
+    props.operations,
+    (key, operations) => {
+      const containerParts = (key.split("/") ?? []).filter((p) => p !== props.service?.type.name);
+      const subPathExport = ["api", ...containerParts]
+        .map((p) => namePolicy.getName(p, "interface-member"))
+        .join("/");
+      return getSourceDirectory(
+        containerParts,
+        <><ts.BarrelFile export={subPathExport} /><OperationsFile path="operations.ts" operations={operations} service={props.service} /></>,
+      );
+    },
+    { joiner: "\n\n" },
+  );
+}
+
+function getSourceDirectory(directoryPath: string[], children: Children) {
+  const currentPath = [...directoryPath];
+  const current = currentPath.shift();
+
+  if (!current) {
+    return children;
+  }
+
+  const namePolicy = ts.createTSNamePolicy();
+  const directoryName = namePolicy.getName(current, "variable");
+
+  return <SourceDirectory path={directoryName}>
+      {getSourceDirectory(currentPath, children)}
+    </SourceDirectory>;
+}
 
 export interface OperationsFileProps {
+  path: string;
   operations: Operation[];
   service?: Service;
 }
 
 export function OperationsFile(props: OperationsFileProps) {
-  if(!props.service) {
+  if (!props.service) {
     return null;
   }
 
-  return (
-    <ts.SourceFile path="operations.ts">
-      {mapJoin(props.operations, (operation) => {
-        const responses = $.httpOperation.getResponses(operation).filter(r => r.statusCode !== "*")
-
-        let httpResponse: Type | undefined;
-        if(responses.length > 1) {
-          const res = [...new Set(responses.map(r => r.responseContent.body?.type))].filter(t => t !== undefined)
-          httpResponse = $.union.create({
-            variants: res.map(t => $.unionVariant.create({type: t})),
-          })
-        } else {
-          httpResponse = responses[0].responseContent.body?.type
-        }
+  return <ts.SourceFile path={props.path}>
+      {mapJoin(props.operations, (o) => {
+        const preparedOperation = prepareOperation(o);
+        const httpReturnType = $.httpOperation.getReturnType(preparedOperation);
         const responseRefkey = refkey();
+        const signatureParams = {  "client": <ts.Reference refkey={ClientContextRefkey}/>};
         return (
-          <FunctionDeclaration export async type={operation} returnType={httpResponse ?<TypeExpression type={httpResponse} /> : "void"} parameters={{"client": <ts.Reference refkey={getClientContextRefkey(props.service!)}/>}}>
-            <HttpRequest operation={operation} responseRefkey={responseRefkey} />
-            <HttpResponse operation={operation} responseRefkey={responseRefkey} />
+          <FunctionDeclaration export async type={preparedOperation} returnType={httpReturnType ?<TypeExpression type={httpReturnType} /> : "void"} parameters={signatureParams}>
+            <HttpRequest operation={o} responseRefkey={responseRefkey} />
+            <HttpResponse operation={o} responseRefkey={responseRefkey} />
           </FunctionDeclaration>
         );
       }, {joiner: "\n\n"})}
-    </ts.SourceFile>
-  );
+    </ts.SourceFile>;
 }

@@ -1,10 +1,24 @@
 import * as ay from "@alloy-js/core";
 import * as ts from "@alloy-js/typescript";
-import { EmitContext, Enum, listServices, Model, navigateProgram, navigateType, Operation, Scalar, Type, Union } from "@typespec/compiler";
+import {
+  EmitContext,
+  Enum,
+  getNamespaceFullName,
+  listServices,
+  Model,
+  navigateProgram,
+  navigateType,
+  Operation,
+  Scalar,
+  Service,
+  Type,
+  Union,
+} from "@typespec/compiler";
 import { ClientContext } from "./components/client-context.js";
+import { ClientFile } from "./components/client.jsx";
 import { uriTemplateLib } from "./components/external-packages/uri-template.js";
 import { ModelsFile } from "./components/models-file.js";
-import { OperationsFile } from "./components/operations-file.js";
+import { Operations } from "./components/operations-file.js";
 import { ModelSerializers } from "./components/serializers.js";
 import {
   HttpFetchDeclaration,
@@ -14,12 +28,12 @@ import {
 export async function $onEmit(context: EmitContext) {
   const visited = operationWalker(context);
   const tsNamePolicy = ts.createTSNamePolicy();
-  const outputDir = context.emitterOutputDir;
-  const service = listServices(context.program)[0];
-  return (
-    <ay.Output namePolicy={tsNamePolicy} externals={[uriTemplateLib]} basePath={outputDir}>
+  const service: Service | undefined = listServices(context.program)[0];
+  return <ay.Output namePolicy={tsNamePolicy} externals={[uriTemplateLib]}>
       <ts.PackageDirectory name="test-package" version="1.0.0" path=".">
         <ay.SourceDirectory path="src">
+          <ts.BarrelFile export="." />
+          <ClientFile service={service}  />
           <ay.SourceDirectory path="models">
             <ts.BarrelFile />
             <ModelsFile types={visited.dataTypes} />
@@ -27,7 +41,7 @@ export async function $onEmit(context: EmitContext) {
           </ay.SourceDirectory>
           <ay.SourceDirectory path="api">
             <ClientContext service={service} />
-            <OperationsFile operations={visited.operations} service={service} />
+            <Operations operations={visited.operations} service={service} />
             <ts.BarrelFile />
           </ay.SourceDirectory>
           <ay.SourceDirectory path="utilities">
@@ -38,65 +52,97 @@ export async function $onEmit(context: EmitContext) {
           </ay.SourceDirectory>
         </ay.SourceDirectory>
       </ts.PackageDirectory>
-    </ay.Output>
-  );
+    </ay.Output>;
+}
+
+function getOperationContainerKey(operation: Operation) {
+  const interfaceName = operation.interface?.name;
+  const namespace = operation.namespace;
+  const operationContainer = [];
+  if (interfaceName) {
+    operationContainer.push(interfaceName);
+  }
+  if (namespace) {
+    const namespaceParts = getNamespaceFullName(namespace, {
+      namespaceFilter: (ns) => !getNamespaceFullName(ns).includes("TypeSpec"),
+    }).split(".");
+    operationContainer.push(...namespaceParts);
+  }
+  return operationContainer.join("/");
+}
+
+function trackOperation(operations: Map<string, Operation[]>, operation: Operation) {
+  const key = getOperationContainerKey(operation);
+  if (!operations.has(key)) {
+    operations.set(key, []);
+  }
+  operations.get(key)!.push(operation);
 }
 
 function operationWalker(context: EmitContext) {
   const types = new Set<DataType>();
-  const operations = new Set<Operation>();
-  navigateProgram(context.program, {
-    operation(o) {
-      operations.add(o);
-      navigateType(o, {
-        model(m) {
-          trackType(types, m);
-        }, modelProperty(p) {
-          trackType(types, p.type);
-        },
-         scalar(s) {
-          if(s.namespace?.name !== "TypeSpec") {
-            return;
-          }
+  const operations = new Map<string, Operation[]>();
+  navigateProgram(
+    context.program,
+    {
+      operation(o) {
+        trackOperation(operations, o);
+        navigateType(
+          o,
+          {
+            model(m) {
+              trackType(types, m);
+            },
+            modelProperty(p) {
+              trackType(types, p.type);
+            },
+            scalar(s) {
+              if (s.namespace?.name !== "TypeSpec") {
+                return;
+              }
 
-          trackType(types, s);
-         },
-         enum(e) {
-          trackType(types, e);
-         },
-         union(u) {
-          trackType(types, u);
-         },
-         unionVariant(v) {
-          trackType(types, v.type);
-         }
-      }, {includeTemplateDeclaration: false});
-    }
-  }, {includeTemplateDeclaration: false});
+              trackType(types, s);
+            },
+            enum(e) {
+              trackType(types, e);
+            },
+            union(u) {
+              trackType(types, u);
+            },
+            unionVariant(v) {
+              trackType(types, v.type);
+            },
+          },
+          { includeTemplateDeclaration: false },
+        );
+      },
+    },
+    { includeTemplateDeclaration: false },
+  );
 
   const dataTypes = Array.from(types);
-  const operationsArray = Array.from(operations);
 
-  return {dataTypes, operations: operationsArray};
- 
+  return { dataTypes, operations };
 }
 
-type DataType =  Model | Union | Enum | Scalar;
+type DataType = Model | Union | Enum | Scalar;
 
 function isDataType(type: Type): type is DataType {
-  return type.kind === "Model" || type.kind === "Union" || type.kind === "Enum" || type.kind === "Scalar";
+  return (
+    type.kind === "Model" || type.kind === "Union" || type.kind === "Enum" || type.kind === "Scalar"
+  );
 }
 
 function isDeclaredType(type: Type): boolean {
-  if("namespace" in type && type.namespace?.name === "TypeSpec") {
-    return false;
-  }
-  
-  if(!isDataType(type)) {
+  if ("namespace" in type && type.namespace?.name === "TypeSpec") {
     return false;
   }
 
-  if(type.name === undefined || type.name === "") {
+  if (!isDataType(type)) {
+    return false;
+  }
+
+  if (type.name === undefined || type.name === "") {
     return false;
   }
 
@@ -104,12 +150,11 @@ function isDeclaredType(type: Type): boolean {
 }
 
 function trackType(types: Set<DataType>, type: Type) {
-
-  if(!isDataType(type)) {
+  if (!isDataType(type)) {
     return;
   }
 
-  if(!isDeclaredType(type)) {
+  if (!isDeclaredType(type)) {
     return;
   }
 
