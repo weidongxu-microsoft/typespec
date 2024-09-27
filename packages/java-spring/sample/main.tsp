@@ -6,6 +6,13 @@ namespace People {
     pets: Pets.Pet[];
   }
 
+  enum Direction {
+    North,
+    East,
+    South,
+    West,
+  }
+
   op listPeople(sortBy?: string): Person<string>[];
 }
 

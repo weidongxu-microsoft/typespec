@@ -3,7 +3,7 @@ import * as jv from "@alloy-js/java";
 import { javaUtil, MavenProjectConfig } from "@alloy-js/java";
 import { EmitContext, getNamespaceFullName, isStdNamespace, Type } from "@typespec/compiler";
 import { TypeCollector } from "@typespec/emitter-framework";
-import { ModelDeclaration } from "@typespec/emitter-framework/java";
+import { EnumDeclaration, ModelDeclaration } from "@typespec/emitter-framework/java";
 import {
   getAllHttpServices,
   namespace as HttpNamespace,
@@ -100,6 +100,15 @@ export async function $onEmit(context: EmitContext) {
           <jv.PackageDirectory package="controllers">
             {emitOperations(context, httpOperations)}
           </jv.PackageDirectory>
+        </jv.PackageDirectory>
+        <jv.PackageDirectory package="enums">
+          {types.dataTypes
+            .filter((type) => type.kind === "Enum")
+            .map((type) => (
+              <jv.SourceFile path={type.name + ".java"}>
+                <EnumDeclaration type={type} />
+              </jv.SourceFile>
+            ))}
         </jv.PackageDirectory>
       </SpringProject>
     </ay.Output>
