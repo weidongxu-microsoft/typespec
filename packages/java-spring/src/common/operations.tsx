@@ -1,13 +1,15 @@
 import { Child, code, mapJoin, refkey } from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { useJavaNamePolicy } from "@alloy-js/java";
-import { $, EmitContext, ModelProperty } from "@typespec/compiler";
+import { $, EmitContext, Model, ModelProperty } from "@typespec/compiler";
 import { TypeExpression } from "@typespec/emitter-framework/java";
-import { getRoutePath, HttpOperation, OperationContainer } from "@typespec/http";
+import { HttpOperation, OperationContainer } from "@typespec/http";
 import { FlatHttpResponse } from "@typespec/http/typekit";
+import { isNoEmit } from "../emitter.js";
 import { RestController } from "../spring/components/index.js";
 import { SpringServiceEndpoint } from "../spring/components/spring-service-endpoint.js";
 import { springFramework } from "../spring/libraries/index.js";
+import { getCustomResponseModelName, getNonErrorResponses } from "./responses.js";
 
 export interface OperationsGroup {
   container?: OperationContainer;
@@ -25,9 +27,6 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
     <>
       {Object.values(ops).map((nsOps) => {
         if (nsOps.container === undefined) return null;
-
-        // Get route decorator on container
-        const routePath = getRoutePath(context.program, nsOps.container)?.path;
 
         const serviceAccessor = nsOps.container?.name.toLowerCase() + "Service";
 
@@ -104,6 +103,9 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
                   // TODO: Currently takes first response as the basis for the @body type
                   const response: FlatHttpResponse = $.httpOperation.getResponses(op.operation)[0];
 
+                  const nonErrorResponses = getNonErrorResponses(op);
+                  const requiresCustomModel = nonErrorResponses.length > 1;
+
                   // Takes status codes from all responses, this could happen from for instance e.g MyDataModel | CreatedResponse, emits status codes 200 & 201
                   // or MyDataModel & CreatedResponse only emits status code 201
 
@@ -117,12 +119,32 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
                   return (
                     <>
                       <SpringServiceEndpoint op={op}>
-                        {responseBodyType != null
+                        {requiresCustomModel
                           ? code`
+                          ${refkey(getCustomResponseModelName(op))} returnedBody = ${serviceAccessor}.${op.operation?.name}(${paramNames.join(", ")});
+                          ${mapJoin(
+                            nonErrorResponses,
+                            (res) => {
+                              const responseModel = res.type as Model;
+                              const inBuiltResponse = isNoEmit(responseModel);
+                              return code`
+                                if (returnedBody.get${responseModel.name}() != null) {
+                                  return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(${!inBuiltResponse && code`returnedBody.get${responseModel.name}(), `}${springFramework.HttpStatus}.valueOf(${res.statusCodes as number}));
+                                }
+                              `;
+                            },
+                            {
+                              joiner: " else ",
+                            },
+                          )}
+                          return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(${springFramework.HttpStatus}.valueOf(${statusCode as number}));
+                        `
+                          : responseBodyType != null
+                            ? code`
                           ${(<TypeExpression type={responseBodyType} />)} returnedBody = ${serviceAccessor}.${op.operation?.name}(${paramNames.join(", ")});
                           return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(returnedBody, ${springFramework.HttpStatus}.valueOf(${statusCode as number}));
                         `
-                          : code`
+                            : code`
                           ${serviceAccessor}.${op.operation?.name}(${paramNames.join(", ")});
                           return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(${springFramework.HttpStatus}.valueOf(${statusCode as number}));
                         `}
@@ -130,7 +152,7 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
                     </>
                   );
                 },
-                { joiner: "\n\n" }
+                { joiner: "\n\n" },
               )}
             </RestController>
           </jv.SourceFile>
@@ -211,13 +233,14 @@ export function emitServices(context: EmitContext, ops: Record<string, Operation
                     // - If error model part of response, add `throws <CustomError>` clause
                     //   to specify the error that should be thrown if any
 
+                    const nonErrorResponses = getNonErrorResponses(op);
+                    const requiresCustomModel = nonErrorResponses.length > 1;
+
                     // TODO: For now assuming one response type
                     // TODO: Combine multiple status codes and create custom object
                     const response: FlatHttpResponse = $.httpOperation.getResponses(
-                      op.operation
+                      op.operation,
                     )[0];
-
-                    // TODO: Get error model type and specify throws clause on method
 
                     const responseBodyType = response.responseContent.body?.type;
 
@@ -241,13 +264,17 @@ export function emitServices(context: EmitContext, ops: Record<string, Operation
                         name={op.operation?.name}
                         // Interface will usually always return the type of our body, and void if body is undefined
                         return={
-                          responseBodyType ? <TypeExpression type={responseBodyType} /> : undefined
+                          requiresCustomModel ? (
+                            refkey(getCustomResponseModelName(op))
+                          ) : responseBodyType ? (
+                            <TypeExpression type={responseBodyType} />
+                          ) : undefined
                         }
                         parameters={params}
                       />
                     );
                   },
-                  { joiner: "\n" }
+                  { joiner: "\n" },
                 )}
               </jv.Interface>
             </jv.SourceFile>

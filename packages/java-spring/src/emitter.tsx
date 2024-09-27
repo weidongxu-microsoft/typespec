@@ -1,6 +1,7 @@
 import * as ay from "@alloy-js/core";
+import { code } from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
-import { javaUtil, MavenProjectConfig } from "@alloy-js/java";
+import { createJavaNamePolicy, javaUtil, MavenProjectConfig } from "@alloy-js/java";
 import { EmitContext, getNamespaceFullName, isStdNamespace, Type } from "@typespec/compiler";
 import { TypeCollector } from "@typespec/emitter-framework";
 import { ModelDeclaration } from "@typespec/emitter-framework/java";
@@ -11,6 +12,7 @@ import {
   HttpService,
 } from "@typespec/http";
 import { emitOperations, emitServices, OperationsGroup } from "./common/index.js";
+import { emitResponseModels } from "./common/responses.js";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
 
@@ -71,26 +73,28 @@ export async function $onEmit(context: EmitContext) {
       acc[namespaceKey] = { ...acc[namespaceKey], operations };
       return acc;
     },
-    {} as Record<string, OperationsGroup>
+    {} as Record<string, OperationsGroup>,
   );
 
   // Query http operations for response models, and emit them
-  Object.values(httpOperations).forEach((group) => {
-    group.operations.forEach((op) => {
-      const responseModels = op.responses.map((res) => res.type);
-      responseModels.forEach((model) => {
-        if (isNoEmit(model)) {
-          return;
-        }
+  serviceOperations.forEach((op) => {
+    const responseModels = op.responses.map((res) => res.type);
+    responseModels.forEach((model) => {
+      if (isNoEmit(model)) {
+        return;
+      }
 
-        types.dataTypes.push(model);
-      });
+      types.dataTypes.push(model);
     });
   });
 
   const outputDir = context.emitterOutputDir;
   return (
-    <ay.Output externals={[springFramework, javaUtil]} basePath={outputDir}>
+    <ay.Output
+      externals={[springFramework, javaUtil]}
+      basePath={outputDir}
+      namePolicy={createJavaNamePolicy()}
+    >
       <SpringProject name="TestProject" mavenProjectConfig={projectConfig}>
         <jv.PackageDirectory package="io.typespec.generated">
           <jv.SourceFile path="MainApplication.java">
@@ -110,9 +114,22 @@ export async function $onEmit(context: EmitContext) {
                   <ModelDeclaration type={type} />
                 </jv.SourceFile>
               ))}
+            <jv.SourceFile path="NoBody.java">
+              {code`
+                /**
+                * Represents a response with no body. Used for custom response classes
+                */
+              `}
+              <jv.Class public name={"NoBody"}>
+                <jv.Constructor public></jv.Constructor>
+              </jv.Class>
+            </jv.SourceFile>
           </jv.PackageDirectory>
           <jv.PackageDirectory package="controllers">
             {emitOperations(context, httpOperations)}
+          </jv.PackageDirectory>
+          <jv.PackageDirectory package="responses">
+            {emitResponseModels(serviceOperations)}
           </jv.PackageDirectory>
         </jv.PackageDirectory>
       </SpringProject>
