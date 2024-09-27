@@ -18,6 +18,25 @@ op foo(): Widget;
 
 ## TypeScript
 
+### Client
+
+It generates a class called TestClient with a single operation
+
+```ts src/client.ts
+import { TestContext, TestOptions, createTestContext } from "./api/clientContext.js";
+import { foo } from "./api/operations.js";
+
+export class TestClient {
+  #context: TestContext;
+  constructor(endpoint: string, options?: TestOptions) {
+    this.#context = createTestContext(endpoint, options);
+  }
+  foo() {
+    return foo(this.#context);
+  }
+}
+```
+
 ### Model
 
 It generates a model for the Widget return type
@@ -49,7 +68,7 @@ export function widgetToTransport(item: Widget) {
 The context stores the information required to reach the service. In this case a createTestContext function should be generated with a required endpoint parameter. This example has no auth or other client parameters so endpoint will be the only.
 
 ```ts src/api/clientContext.ts function createTestContext
-export function createTestContext(endpoint: string, options: TestOptions): TestContext {
+export function createTestContext(endpoint: string, options?: TestOptions): TestContext {
   return {
     endpoint,
   };
@@ -82,7 +101,7 @@ import { httpFetch } from "../utilities/http-fetch.js";
 export async function foo(client: TestContext): Promise<Widget> {
   const path = parse("/").expand({});
 
-  const url = `${client.endpoint.replace(/\/+$/, "")}/${path.replace(/\/+$/, "")}`;
+  const url = `${client.endpoint.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
 
   const httpRequestOptions = {
     method: "get",
@@ -90,8 +109,9 @@ export async function foo(client: TestContext): Promise<Widget> {
   };
 
   const response = await httpFetch(url, httpRequestOptions);
-  if (response.status === 200 && response.headers.get("content-type") === "application/json") {
-    return widgetToApplication(response.body);
+  if (response.status === 200) {
+    const bodyJson = await response.json();
+    return widgetToApplication(bodyJson);
   }
 
   throw new Error("Unhandled response");

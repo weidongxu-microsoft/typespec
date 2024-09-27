@@ -37,7 +37,7 @@ describe("HttpRequest.Url", () => {
         <ts.SourceFile path="test.ts">
           <HttpRequest.Url operation={read} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
@@ -48,7 +48,7 @@ describe("HttpRequest.Url", () => {
 
     const path = parse("/widgets").expand({});
 
-    const url = \`\${client.endpoint.replace(/\\/+$/, '')}/\${path.replace(/\\/+$/, '')}\`;
+    const url = \`\${client.endpoint.replace(/\\/+$/, '')}/\${path.replace(/^\\/+/, '')}\`;
     `;
     expect(actualContent).toEqual(expectedContent);
   });
@@ -74,7 +74,7 @@ describe("HttpRequest.Url", () => {
         <ts.SourceFile path="test.ts">
           <HttpRequest.Url operation={read} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
@@ -87,7 +87,7 @@ describe("HttpRequest.Url", () => {
       "id": id
     });
 
-    const url = \`\${client.endpoint.replace(/\\/+$/, '')}/\${path.replace(/\\/+$/, '')}\`;
+    const url = \`\${client.endpoint.replace(/\\/+$/, '')}/\${path.replace(/^\\/+/, '')}\`;
     `;
     expect(actualContent).toEqual(expectedContent);
   });
@@ -117,7 +117,7 @@ describe("HttpRequest.Url", () => {
         <ts.SourceFile path="test.ts">
           <HttpRequest.Url operation={read} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
@@ -130,7 +130,7 @@ describe("HttpRequest.Url", () => {
       "id": id
     });
 
-    const url = \`\${client.endpoint.replace(/\\/+$/, '')}/\${path.replace(/\\/+$/, '')}\`;
+    const url = \`\${client.endpoint.replace(/\\/+$/, '')}/\${path.replace(/^\\/+/, '')}\`;
     `;
     expect(actualContent).toEqual(expectedContent);
   });
@@ -156,7 +156,7 @@ describe("HttpRequest.Url", () => {
         <ts.SourceFile path="test.ts">
           <HttpRequest.Url operation={read} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
@@ -169,7 +169,7 @@ describe("HttpRequest.Url", () => {
       "my_id": myId
     });
 
-    const url = \`\${client.endpoint.replace(/\\/+$/, '')}/\${path.replace(/\\/+$/, '')}\`;
+    const url = \`\${client.endpoint.replace(/\\/+$/, '')}/\${path.replace(/^\\/+/, '')}\`;
     `;
     expect(actualContent).toEqual(expectedContent);
   });
@@ -195,7 +195,7 @@ describe("HttpRequest.Url", () => {
         <ts.SourceFile path="test.ts">
           <HttpRequest.Url operation={read} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
@@ -208,7 +208,7 @@ describe("HttpRequest.Url", () => {
       "id": id
     });
 
-    const url = \`\${client.endpoint.replace(/\\/+$/, '')}/\${path.replace(/\\/+$/, '')}\`;
+    const url = \`\${client.endpoint.replace(/\\/+$/, '')}/\${path.replace(/^\\/+/, '')}\`;
     `;
     expect(actualContent).toEqual(expectedContent);
   });
@@ -234,7 +234,7 @@ describe("HttpRequest.Url", () => {
         <ts.SourceFile path="test.ts">
           <HttpRequest.Url operation={read} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
@@ -244,10 +244,10 @@ describe("HttpRequest.Url", () => {
     import { parse } from "uri-template";
 
     const path = parse("/widgets{?id}").expand({
-      "id": options.id
+      "id": options?.id
     });
 
-    const url = \`\${client.endpoint.replace(/\\/+$/, '')}/\${path.replace(/\\/+$/, '')}\`;
+    const url = \`\${client.endpoint.replace(/\\/+$/, '')}/\${path.replace(/^\\/+/, '')}\`;
     `;
     expect(actualContent).toEqual(expectedContent);
   });
@@ -277,7 +277,7 @@ describe("HttpRequest.Url", () => {
         <ts.SourceFile path="test.ts">
           <HttpRequest.Url operation={read} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
@@ -287,10 +287,10 @@ describe("HttpRequest.Url", () => {
     import { parse } from "uri-template";
 
     const path = parse("/widgets{?id}").expand({
-      "id": options.id
+      "id": options?.id
     });
 
-    const url = \`\${client.endpoint.replace(/\\/+$/, '')}/\${path.replace(/\\/+$/, '')}\`;
+    const url = \`\${client.endpoint.replace(/\\/+$/, '')}/\${path.replace(/^\\/+/, '')}\`;
     `;
     expect(actualContent).toEqual(expectedContent);
   });
