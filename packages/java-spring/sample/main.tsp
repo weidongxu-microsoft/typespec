@@ -1,18 +1,21 @@
 namespace People {
-  model Person<T> {
+  model Person {
     firstName: string;
     lastName: string;
-    special: T;
     pets: Pets.Pet[];
   }
 
-  op listPeople(sortBy?: string): Person<string>[];
+  model Adult extends Person {
+    age: int32;
+  }
+
+  op listPeople(sortBy?: string): Person;
 }
 
 namespace Pets {
   model Pet {
     name: string;
-    owner?: People.Person<int32>;
+    owner?: People.Person;
   }
   op listPets(): Pet[];
 }

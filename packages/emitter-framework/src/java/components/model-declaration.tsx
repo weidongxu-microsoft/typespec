@@ -30,12 +30,16 @@ export function ModelDeclaration({
   generics?.forEach((generic) => (genericObject[generic] = ""));
   const refkey = getRefkey(type);
 
+  const baseModel = type.baseModel;
+  const extendsExpression = baseModel ? baseModel.name : "";
+
   return (
     <Class
       public
       name={name}
       refkey={refkey}
       generics={generics?.length !== 0 ? genericObject : undefined}
+      extends={extendsExpression}
     >
       {""}
       {mapJoin(
