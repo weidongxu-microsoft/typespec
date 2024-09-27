@@ -31,7 +31,7 @@ export function ModelDeclaration({
   const refkey = getRefkey(type);
 
   const baseModel = type.baseModel;
-  const extendsExpression = baseModel ? baseModel.name : "";
+  const extendsExpression = baseModel ? getRefkey(baseModel) : "";
 
   return (
     <Class
