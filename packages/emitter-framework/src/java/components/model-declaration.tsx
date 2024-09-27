@@ -22,7 +22,9 @@ export function ModelDeclaration({
 }: ModelDeclarationProps) {
   const namePolicy = useJavaNamePolicy();
 
-  const properties = Array.from(type.properties.values());
+  const properties = Array.from(type.properties.values()).filter((p) => {
+    return !p.decorators?.some((d) => d.definition?.name === "@statusCode");
+  });
 
   const name = namePolicy.getName(type.name, "class");
   const generics = type.node ? getTemplateParams(type.node) : undefined;
@@ -30,12 +32,15 @@ export function ModelDeclaration({
   generics?.forEach((generic) => (genericObject[generic] = ""));
   const refkey = getRefkey(type);
 
+  const isErrorModel = type.decorators?.some((d) => d.definition?.name === "@error");
+
   return (
     <Class
       public
       name={name}
       refkey={refkey}
       generics={generics?.length !== 0 ? genericObject : undefined}
+      extends={isErrorModel ? "Exception" : undefined}
     >
       {""}
       {mapJoin(
@@ -43,7 +48,7 @@ export function ModelDeclaration({
         (property) => {
           return propertyComponent(property);
         },
-        { joiner: "\n" }
+        { joiner: "\n" },
       )}
 
       <Constructor public />
@@ -61,7 +66,7 @@ export function ModelDeclaration({
             </>
           );
         },
-        { joiner: "\n\n" }
+        { joiner: "\n\n" },
       )}
       {""}
     </Class>

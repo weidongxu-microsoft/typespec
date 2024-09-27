@@ -27,7 +27,14 @@ export function SpringServiceEndpoint({ op, children }: SpringServiceEndpointPro
   const responseBodyType = response.responseContent.body?.type;
 
   let returnType;
-  if (responseBodyType) {
+  if (op.responses.length > 1) {
+    // prettier-ignore
+    returnType = (
+      <>
+        {springFramework.ResponseEntity}<Generics types={['?']} />
+      </>
+    );
+  } else if (responseBodyType) {
     // prettier-ignore
     returnType = (
       <>

@@ -99,6 +99,18 @@ export function getNonErrorResponses(op: HttpOperation) {
 }
 
 /**
+ * Get responses for a {@link HttpOperation} that are decorated with @error decorator
+ *
+ * @param op The Http Operation
+ */
+export function getErrorResponses(op: HttpOperation) {
+  return op.responses.filter((res) => {
+    const responseModel = res.type as Model;
+    return responseModel?.decorators?.some((decorator) => decorator.definition?.name === "@error");
+  });
+}
+
+/**
  * Used to get the name when generating custom response models
  *
  * @param op The Http Operation

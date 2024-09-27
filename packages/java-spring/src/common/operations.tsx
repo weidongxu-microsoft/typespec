@@ -1,4 +1,4 @@
-import { Child, code, mapJoin, refkey } from "@alloy-js/core";
+import { Child, code, Indent, mapJoin, refkey } from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { useJavaNamePolicy } from "@alloy-js/java";
 import { $, EmitContext, Model, ModelProperty } from "@typespec/compiler";
@@ -9,7 +9,11 @@ import { isNoEmit } from "../emitter.js";
 import { RestController } from "../spring/components/index.js";
 import { SpringServiceEndpoint } from "../spring/components/spring-service-endpoint.js";
 import { springFramework } from "../spring/libraries/index.js";
-import { getCustomResponseModelName, getNonErrorResponses } from "./responses.js";
+import {
+  getCustomResponseModelName,
+  getErrorResponses,
+  getNonErrorResponses,
+} from "./responses.js";
 
 export interface OperationsGroup {
   container?: OperationContainer;
@@ -116,11 +120,12 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
 
                   const responseBodyType = response.responseContent.body?.type;
 
-                  return (
+                  const errorResponses = getErrorResponses(op);
+
+                  const serviceBody = (
                     <>
-                      <SpringServiceEndpoint op={op}>
-                        {requiresCustomModel
-                          ? code`
+                      {requiresCustomModel
+                        ? code`
                           ${refkey(getCustomResponseModelName(op))} returnedBody = ${serviceAccessor}.${op.operation?.name}(${paramNames.join(", ")});
                           ${mapJoin(
                             nonErrorResponses,
@@ -139,15 +144,43 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
                           )}
                           return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(${springFramework.HttpStatus}.valueOf(${statusCode as number}));
                         `
-                          : responseBodyType != null
-                            ? code`
+                        : responseBodyType != null
+                          ? code`
                           ${(<TypeExpression type={responseBodyType} />)} returnedBody = ${serviceAccessor}.${op.operation?.name}(${paramNames.join(", ")});
                           return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(returnedBody, ${springFramework.HttpStatus}.valueOf(${statusCode as number}));
                         `
-                            : code`
+                          : code`
                           ${serviceAccessor}.${op.operation?.name}(${paramNames.join(", ")});
                           return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(${springFramework.HttpStatus}.valueOf(${statusCode as number}));
                         `}
+                    </>
+                  );
+
+                  // prettier-ignore
+                  return (
+                    <>
+                      <SpringServiceEndpoint op={op}>
+                        {errorResponses.length > 0 ? (
+                          <>
+                            {code`try {`}
+                            <Indent>{serviceBody}</Indent>
+                            {"}"} {mapJoin(
+                              errorResponses,
+                              (res) => {
+                                return code`
+                                catch (${refkey(res.type)} e) {
+                                  return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(e, ${springFramework.HttpStatus}.valueOf(${res.statusCodes as number}));
+                                }
+                              `;
+                              },
+                              {
+                                joiner: " ",
+                              },
+                            )}
+                          </>
+                        ) : (
+                          serviceBody
+                        )}
                       </SpringServiceEndpoint>
                     </>
                   );
@@ -259,9 +292,21 @@ export function emitServices(context: EmitContext, ops: Record<string, Operation
                     //   console.log("End Responses");
                     // });
 
+                    const errorResponses = getErrorResponses(op);
+                    const throwsClause = mapJoin(
+                      errorResponses,
+                      (res) => {
+                        return refkey(res.type);
+                      },
+                      {
+                        joiner: ", ",
+                      },
+                    );
+
                     return (
                       <jv.Method
                         name={op.operation?.name}
+                        throws={throwsClause}
                         // Interface will usually always return the type of our body, and void if body is undefined
                         return={
                           requiresCustomModel ? (
