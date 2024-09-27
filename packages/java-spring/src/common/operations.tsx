@@ -306,7 +306,7 @@ export function emitServices(context: EmitContext, ops: Record<string, Operation
                     return (
                       <jv.Method
                         name={op.operation?.name}
-                        throws={errorResponses.length > 1 ? throwsClause : undefined}
+                        throws={errorResponses.length >= 1 ? throwsClause : undefined}
                         // Interface will usually always return the type of our body, and void if body is undefined
                         return={
                           requiresCustomModel ? (
