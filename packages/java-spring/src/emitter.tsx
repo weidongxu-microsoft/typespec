@@ -2,7 +2,7 @@ import * as ay from "@alloy-js/core";
 import { code } from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { createJavaNamePolicy, javaUtil, MavenProjectConfig } from "@alloy-js/java";
-import { EmitContext, getNamespaceFullName, isStdNamespace, Type } from "@typespec/compiler";
+import { $, EmitContext, getNamespaceFullName, isStdNamespace, Type } from "@typespec/compiler";
 import { TypeCollector } from "@typespec/emitter-framework";
 import { ModelDeclaration } from "@typespec/emitter-framework/java";
 import {
@@ -33,16 +33,6 @@ const projectConfig: MavenProjectConfig = {
   },
 };
 
-/**
- * Just leaving my general thought notes here:
- *
- * A spring application will generally consist of the following parts.
- * - Models (Mapped to actual database objects)
- * - DTOs (Plain model used to hold some data)
- * - Route Controllers (Controllers at a certain endpoint, provides GET, POST, PUT, DELETE etc)
- * - Services (Business logic) that are invoked
- * - Repositories (Way to retrieve data from where it's stored, database etc)
- */
 export async function $onEmit(context: EmitContext) {
   // Query types needed in program, models, interfaces etc
   const types = queryTypes(context);
@@ -50,9 +40,8 @@ export async function $onEmit(context: EmitContext) {
   // Get all http services, then collect all routes from services
   const services = getAllHttpServices(context.program);
 
-  // Collect operations from all services into one
+  // Collect operations from all services into one for further querying
   const serviceOperations: HttpOperation[] = [];
-
   services.forEach((service) => {
     serviceOperations.push(...((service[0] as HttpService)?.operations ?? []));
   });
@@ -76,7 +65,7 @@ export async function $onEmit(context: EmitContext) {
     {} as Record<string, OperationsGroup>,
   );
 
-  // Query http operations for response models, and emit them
+  // Query TypeSpec types that may need to be emitted based on responses from http operations
   serviceOperations.forEach((op) => {
     const responseModels = op.responses.map((res) => res.type);
     responseModels.forEach((model) => {
@@ -105,12 +94,12 @@ export async function $onEmit(context: EmitContext) {
               </jv.Method>
             </jv.Class>
           </jv.SourceFile>
-          {emitServices(context, httpOperations)}
+          {emitServices(httpOperations)}
           <jv.PackageDirectory package="models">
             {types.dataTypes
               .filter((type) => type.kind === "Model")
               .map((type) => {
-                const isErrorModel = type.decorators?.some((d) => d.definition?.name === "@error");
+                const isErrorModel = $.model.isErrorModel(type);
                 return (
                   <jv.SourceFile path={type.name + ".java"}>
                     {isErrorModel && (
@@ -137,7 +126,7 @@ export async function $onEmit(context: EmitContext) {
             </jv.SourceFile>
           </jv.PackageDirectory>
           <jv.PackageDirectory package="controllers">
-            {emitOperations(context, httpOperations)}
+            {emitOperations(httpOperations)}
           </jv.PackageDirectory>
           <jv.PackageDirectory package="responses">
             {emitResponseModels(serviceOperations)}
@@ -148,7 +137,6 @@ export async function $onEmit(context: EmitContext) {
   );
 }
 
-// TODO: Only query types from operations, and recursively add referring types
 function queryTypes(context: EmitContext) {
   const types = new Set<Type>();
   const globalns = context.program.getGlobalNamespaceType();
@@ -169,6 +157,12 @@ function queryTypes(context: EmitContext) {
   return { dataTypes: [...types] };
 }
 
+/**
+ * Check if type shouldn't be emitted. Generally won't emit anything in a standard
+ * TypeSpec library, as those are reserved for TypeSpec logic and not actually emitted in code
+ *
+ * @param type Type to check.
+ */
 export function isNoEmit(type: Type): boolean {
   // Skip anonymous types
   if (!(type as any).name) {

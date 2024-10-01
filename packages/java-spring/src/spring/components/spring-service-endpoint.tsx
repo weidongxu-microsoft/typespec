@@ -22,7 +22,6 @@ export function SpringServiceEndpoint({ op, children }: SpringServiceEndpointPro
 
   // Return will always be ResponseEntity<T>, with T being either the body type or Void
   // If multiple response types, like MyDataModel | OkResponse, will be ResponseEntity<?> as type is unknown
-  // TODO: Union type of model with in-built response type makes refkey invalid
   const response: FlatHttpResponse = $.httpOperation.getResponses(op.operation)[0];
   const responseBodyType = response.responseContent.body?.type;
 

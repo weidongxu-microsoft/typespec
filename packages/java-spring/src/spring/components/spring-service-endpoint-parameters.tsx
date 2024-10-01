@@ -16,6 +16,7 @@ export function SpringEndpointParameters(op: HttpOperation) {
   const pathParams = $.httpRequest.getParameters(op, "path");
   const queryParams = $.httpRequest.getParameters(op, "query");
 
+  // Set the parameters the method will take, will be built from the operation's parameters
   const paramRecord: Record<string, string> = {};
 
   if (bodyParams && bodyParams.property) {

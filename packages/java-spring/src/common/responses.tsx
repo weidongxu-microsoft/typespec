@@ -1,7 +1,7 @@
 import { mapJoin, refkey } from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { useJavaNamePolicy } from "@alloy-js/java";
-import { Model } from "@typespec/compiler";
+import { $, Model } from "@typespec/compiler";
 import { TypeExpression } from "@typespec/emitter-framework/java";
 import { HttpOperation } from "@typespec/http";
 import { isNoEmit } from "../emitter.js";
@@ -26,6 +26,7 @@ export function emitResponseModels(ops: HttpOperation[]) {
           {mapJoin(
             nonErrorResponses,
             (res) => {
+              if (res.type.kind !== "Model") return;
               const responseModel = res.type as Model;
               const inBuiltResponse = isNoEmit(responseModel);
 
@@ -49,6 +50,7 @@ export function emitResponseModels(ops: HttpOperation[]) {
           {mapJoin(
             nonErrorResponses,
             (res) => {
+              if (res.type.kind !== "Model") return;
               const responseModel = res.type as Model;
               const inBuiltResponse = isNoEmit(responseModel);
 
@@ -64,6 +66,7 @@ export function emitResponseModels(ops: HttpOperation[]) {
                   <jv.Method name={"get" + responseModel.name} public return={returnType}>
                     return this.{variableName};
                   </jv.Method>
+
                   <jv.Method
                     name={"set" + responseModel.name}
                     public
@@ -77,7 +80,7 @@ export function emitResponseModels(ops: HttpOperation[]) {
               );
             },
             {
-              joiner: "\n",
+              joiner: "\n\n",
             },
           )}
         </jv.Class>
@@ -94,7 +97,7 @@ export function emitResponseModels(ops: HttpOperation[]) {
 export function getNonErrorResponses(op: HttpOperation) {
   return op.responses.filter((res) => {
     const responseModel = res.type as Model;
-    return !responseModel?.decorators?.some((decorator) => decorator.definition?.name === "@error");
+    return !$.model.isErrorModel(responseModel);
   });
 }
 
@@ -106,7 +109,7 @@ export function getNonErrorResponses(op: HttpOperation) {
 export function getErrorResponses(op: HttpOperation) {
   return op.responses.filter((res) => {
     const responseModel = res.type as Model;
-    return responseModel?.decorators?.some((decorator) => decorator.definition?.name === "@error");
+    return $.model.isErrorModel(responseModel);
   });
 }
 

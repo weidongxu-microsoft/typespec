@@ -2,7 +2,6 @@ import "@typespec/http";
 using TypeSpec.Http;
 @service
 namespace DemoService {
-
   @error
   model CustomError {
     @statusCode _: 400;

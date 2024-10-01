@@ -1,7 +1,7 @@
 import { Child, code, Indent, mapJoin, refkey } from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { useJavaNamePolicy } from "@alloy-js/java";
-import { $, EmitContext, Model, ModelProperty } from "@typespec/compiler";
+import { $, Model, ModelProperty } from "@typespec/compiler";
 import { TypeExpression } from "@typespec/emitter-framework/java";
 import { HttpOperation, OperationContainer } from "@typespec/http";
 import { FlatHttpResponse } from "@typespec/http/typekit";
@@ -15,18 +15,22 @@ import {
   getNonErrorResponses,
 } from "./responses.js";
 
+/**
+ * Group HttpOperations by the container (Namespace, Interface, etc.) {@link OperationContainer}
+ */
 export interface OperationsGroup {
   container?: OperationContainer;
   operations: HttpOperation[];
 }
 
 /**
- * Emit route handlers for http operations. Takes an OperationsGroup
+ * Emits all service endpoint handlers based on the set of operation groups and operations.
+ * Creates a RestController for each operation group, and creates a service endpoint method for each operation
+ * within that group.
  *
- * @param context Emit context
  * @param ops List of http operations
  */
-export function emitOperations(context: EmitContext, ops: Record<string, OperationsGroup>) {
+export function emitOperations(ops: Record<string, OperationsGroup>) {
   return (
     <>
       {Object.values(ops).map((nsOps) => {
@@ -195,10 +199,9 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
 /**
  * Emit services to implement business logic. Will generate interface, then class to be implemented by user
  *
- * @param context Emit context
  * @param ops List of http operations
  */
-export function emitServices(context: EmitContext, ops: Record<string, OperationsGroup>) {
+export function emitServices(ops: Record<string, OperationsGroup>) {
   return (
     <>
       <jv.PackageDirectory package="services">

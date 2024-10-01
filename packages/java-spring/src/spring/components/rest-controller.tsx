@@ -22,7 +22,6 @@ export function RestController(props: RestControllerProps) {
   const name = namePolicy.getName(props.name ? props.name : props.container.name, "class");
 
   // Get route decorator on container
-  // Temp removing route path from class, as HttpOperations return full path already
   const routePath = $.operationContainer.getRoutePath(props.container);
 
   return (
