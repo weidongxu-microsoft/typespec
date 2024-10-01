@@ -109,11 +109,22 @@ export async function $onEmit(context: EmitContext) {
           <jv.PackageDirectory package="models">
             {types.dataTypes
               .filter((type) => type.kind === "Model")
-              .map((type) => (
-                <jv.SourceFile path={type.name + ".java"}>
-                  <ModelDeclaration type={type} />
-                </jv.SourceFile>
-              ))}
+              .map((type) => {
+                const isErrorModel = type.decorators?.some((d) => d.definition?.name === "@error");
+                return (
+                  <jv.SourceFile path={type.name + ".java"}>
+                    {isErrorModel && (
+                      <jv.Annotation
+                        type={springFramework.JsonIgnoreProperties}
+                        value={{
+                          "": '{"cause", "stackTrace", "localizedMessage", "suppressed"}',
+                        }}
+                      />
+                    )}
+                    <ModelDeclaration type={type} />
+                  </jv.SourceFile>
+                );
+              })}
             <jv.SourceFile path="NoBody.java">
               {code`
                 /**

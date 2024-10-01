@@ -113,9 +113,6 @@ export function emitOperations(context: EmitContext, ops: Record<string, Operati
                   // Takes status codes from all responses, this could happen from for instance e.g MyDataModel | CreatedResponse, emits status codes 200 & 201
                   // or MyDataModel & CreatedResponse only emits status code 201
 
-                  // TODO: Get error model type and specify throws clause on method
-
-                  // TODO: Currently only getting the first status code out even if there are multiple
                   const statusCode = response.statusCode;
 
                   const responseBodyType = response.responseContent.body?.type;
@@ -269,28 +266,11 @@ export function emitServices(context: EmitContext, ops: Record<string, Operation
                     const nonErrorResponses = getNonErrorResponses(op);
                     const requiresCustomModel = nonErrorResponses.length > 1;
 
-                    // TODO: For now assuming one response type
-                    // TODO: Combine multiple status codes and create custom object
                     const response: FlatHttpResponse = $.httpOperation.getResponses(
                       op.operation,
                     )[0];
 
                     const responseBodyType = response.responseContent.body?.type;
-
-                    // // Get responses
-                    // $.httpOperation.getResponses(op.operation).forEach((response) => {
-                    //   const model = response.responseContent.body?.type as Model;
-                    //   console.log("Body:", model?.name);
-                    //   console.log("Response Status Code: " + response.statusCode);
-                    //   model?.decorators?.forEach((decorator) => {
-                    //     // console.log("Decorator:", decorator);
-                    //     console.log("Deco Name", decorator.definition?.name);
-                    //     // decorator.args?.forEach((arg) => {
-                    //     //   console.log("Arg:", arg.value);
-                    //     // });
-                    //   });
-                    //   console.log("End Responses");
-                    // });
 
                     const errorResponses = getErrorResponses(op);
                     const throwsClause = mapJoin(
