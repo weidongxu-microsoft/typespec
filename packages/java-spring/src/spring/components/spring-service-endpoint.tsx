@@ -11,7 +11,7 @@ export interface SpringServiceEndpointProps {
 
 export function SpringServiceEndpoint({ op, children }: SpringServiceEndpointProps) {
   const route = op.verb;
-  const path = <jv.Value value={op.uriTemplate} />;
+  const path = <jv.Value value={op.path} />;
 
   const routeAnnotation = (
     <SpringRouteAnnotation annotationKind={route} annotationParameters={path} />
