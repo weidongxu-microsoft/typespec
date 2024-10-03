@@ -12,7 +12,8 @@ namespace DemoService {
       pets: Pets.Pet[];
     }
 
-    @get op listPeople(@body sortBy?: string): Person<string>[];
+    @route("/people/{id}")
+    op listPeople(id: int32): string;
 
     @put op replacePerson(@bodyRoot person: Person<int32>): Person<int32>;
   }
