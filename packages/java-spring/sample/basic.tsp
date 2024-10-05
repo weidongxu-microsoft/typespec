@@ -1,6 +1,7 @@
 import "@typespec/http";
 using TypeSpec.Http;
 @service
+@useAuth(BearerAuth)
 namespace DemoService {
   @error
   model CustomError {
