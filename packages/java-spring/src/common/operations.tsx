@@ -195,7 +195,7 @@ export function emitOperations(ops: Record<string, OperationsGroup>) {
                               (res) => {
                                 return code`
                                 catch (${refkey(res.type)} e) {
-                                  return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(e, ${springFramework.HttpStatus}.valueOf(${res.statusCodes as number}));
+                                  return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(e, ${springFramework.HttpStatus}.valueOf(${res.statusCodes === '*' ? 500 : res.statusCodes as number}));
                                 }
                               `;
                               },
