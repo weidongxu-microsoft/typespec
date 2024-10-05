@@ -44,12 +44,17 @@ export function SpringEndpointParameters(op: HttpOperation) {
     for (const pathParam of pathParams.properties.values()) {
       const options = $.modelProperty.getHttpParamOptions(pathParam) as PathParameterOptions;
       const optional = pathParam.optional;
-      const optionValue = <jv.Value value={options.name} />;
-      const annotationParams: Record<string, Child> = { name: optionValue };
+      const optionValue = options ? <jv.Value value={options.name} /> : undefined;
+      const annotationParams: Record<string, Child> = options ? { name: optionValue } : {};
       if (optional) {
         annotationParams.required = <jv.Value value={false} />;
       }
-      const annotation = <SpringRouteAnnotation kind="path" parameters={annotationParams} />;
+      const annotation = (
+        <SpringRouteAnnotation
+          kind="path"
+          parameters={Object.values(annotationParams).length >= 1 ? annotationParams : undefined}
+        />
+      );
 
       paramRecord[pathParam.name] = (
         <>
