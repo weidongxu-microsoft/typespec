@@ -27,12 +27,6 @@ export function RestController(props: RestControllerProps) {
   return (
     <>
       <jv.Annotation type={springFramework.RestController} />
-      {routePath && (
-        <jv.Annotation
-          type={springFramework.RequestMapping}
-          value={{ path: <jv.Value value={routePath} /> }}
-        />
-      )}
       <jv.Class public name={`${name}Controller`}>
         {props.children}
       </jv.Class>
