@@ -1,6 +1,6 @@
 import { Children, refkey as getRefkey, mapJoin } from "@alloy-js/core";
 import { Class, Constructor, useJavaNamePolicy } from "@alloy-js/java";
-import { Model, ModelProperty } from "@typespec/compiler";
+import { $, Model, ModelProperty } from "@typespec/compiler";
 import { getTemplateParams } from "../utils.js";
 import { Getter } from "./getter.js";
 import { ModelConstructor } from "./model-constructor.js";
@@ -22,7 +22,7 @@ export function ModelDeclaration({
 }: ModelDeclarationProps) {
   const namePolicy = useJavaNamePolicy();
 
-  const properties = Array.from(type.properties.values()).filter((p) => {
+  const properties = Array.from(type?.properties?.values() ?? []).filter((p) => {
     return !p.decorators?.some((d) => d.definition?.name === "@statusCode");
   });
 
@@ -32,7 +32,7 @@ export function ModelDeclaration({
   generics?.forEach((generic) => (genericObject[generic] = ""));
   const refkey = getRefkey(type);
 
-  const isErrorModel = type.decorators?.some((d) => d.definition?.name === "@error");
+  const isErrorModel = $.model.isErrorModel(type);
 
   return (
     <Class

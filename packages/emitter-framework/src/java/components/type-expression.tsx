@@ -25,6 +25,8 @@ export function TypeExpression({ type }: TypeExpressionProps) {
           {type.enum.name}.{type.name}
         </>
       );
+    case "TemplateParameter":
+      return type?.node?.symbol?.name ?? null;
     case "ModelProperty":
       return <TypeExpression type={type.type} />;
     case "Model":
