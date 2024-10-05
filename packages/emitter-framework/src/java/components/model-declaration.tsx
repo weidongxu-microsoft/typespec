@@ -51,7 +51,7 @@ export function ModelDeclaration({
         { joiner: "\n" },
       )}
 
-      <Constructor public />
+      {properties.length !== 0 && <Constructor public />}
 
       <ModelConstructor type={type} />
 

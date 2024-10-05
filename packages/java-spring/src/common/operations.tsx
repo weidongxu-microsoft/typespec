@@ -1,11 +1,10 @@
 import { Child, code, Indent, mapJoin, refkey } from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { useJavaNamePolicy } from "@alloy-js/java";
-import { $, Model, ModelProperty } from "@typespec/compiler";
+import { $, ModelProperty } from "@typespec/compiler";
 import { TypeExpression } from "@typespec/emitter-framework/java";
 import { HttpOperation, OperationContainer } from "@typespec/http";
 import { FlatHttpResponse } from "@typespec/http/typekit";
-import { isNoEmit } from "../emitter.js";
 import { RestController } from "../spring/components/index.js";
 import { SpringServiceEndpoint } from "../spring/components/spring-service-endpoint.js";
 import { springFramework } from "../spring/libraries/index.js";
@@ -108,17 +107,15 @@ export function emitOperations(ops: Record<string, OperationsGroup>) {
                   // If any of the response models has @error decorator, wrap method in try-catch block
                   // and in catch block return ResponseEntity wrapping the error model as body, and status code of error model
 
-                  // TODO: Currently takes first response as the basis for the @body type
-                  const response: FlatHttpResponse = $.httpOperation.getResponses(op.operation)[0];
-
+                  // Get responses for this operation, if more than 1 there is a custom model
+                  // we return from the interface and check each property to determine body to return
                   const nonErrorResponses = getNonErrorResponses(op);
+                  const errorResponses = getErrorResponses(op);
                   const requiresCustomModel = nonErrorResponses.length > 1;
 
-                  // Takes status codes from all responses, this could happen from for instance e.g MyDataModel | CreatedResponse, emits status codes 200 & 201
-                  // or MyDataModel & CreatedResponse only emits status code 201
-
+                  // These are for when only 1 response is defined, i.e requiresCustomModel is false
+                  const response: FlatHttpResponse = $.httpOperation.getResponses(op.operation)[0];
                   const statusCode = response.statusCode;
-
                   const responseBodyType = response.responseContent.body?.type;
                   // If response contains headers, wrap with ResponseWithHeaders class
                   const responseContainsHeaders = op.responses.some((res) => {
@@ -127,8 +124,7 @@ export function emitOperations(ops: Record<string, OperationsGroup>) {
                     });
                   });
 
-                  // @ts-expect-error Might not exist
-                  const name = responseBodyType?.name ?? "noBody";
+                  // Determine return type for single response, if we have headers or not
                   const returnType = !responseBodyType ? (
                     refkey("NoBody")
                   ) : (
@@ -141,8 +137,6 @@ export function emitOperations(ops: Record<string, OperationsGroup>) {
                     </>
                   ) : returnType;
 
-                  const errorResponses = getErrorResponses(op);
-
                   const serviceBody = (
                     <>
                       {requiresCustomModel
@@ -151,26 +145,18 @@ export function emitOperations(ops: Record<string, OperationsGroup>) {
                           ${mapJoin(
                             nonErrorResponses,
                             (res) => {
-                              const responseModel = res.type as Model;
-                              const inBuiltResponse = isNoEmit(responseModel);
-
                               const requiresHeaders = res.responses.some((res) => {
                                 return Object.values(res?.headers ?? [])?.length ?? 0 > 0;
                               });
                               const bodyType = res?.responses?.[0]?.body?.type;
-                              // @ts-expect-error Might not exist
-                              const name = bodyType?.name ?? res?.type?.name ?? "noBody";
-                              const returnType = !bodyType ? (
-                                refkey("NoBody")
-                              ) : (
-                                <TypeExpression type={bodyType} />
-                              );
-                              // prettier-ignore
-                              const finalReturnType = requiresHeaders ? (
-                                <>
-                                  {refkey("ResponseWithHeaders")}<jv.Generics types={[returnType]} />
-                                </>
-                              ) : returnType;
+                              const name =
+                                // @ts-expect-error Might not exist
+                                bodyType?.indexer?.value?.name ??
+                                // @ts-expect-error Might not exist
+                                bodyType?.name ??
+                                // @ts-expect-error Might not exist
+                                res?.type?.name ??
+                                "noBody";
 
                               return code`
                                 if (returnedBody.get${name}() != null) {
@@ -187,7 +173,7 @@ export function emitOperations(ops: Record<string, OperationsGroup>) {
                         : responseBodyType !== undefined || responseContainsHeaders
                           ? code`
                           ${finalReturnType} returnedBody = ${serviceAccessor}.${op.operation?.name}(${paramNames.join(", ")});
-                          return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(${responseContainsHeaders ? (responseBodyType !== undefined ? code`returnedBody.getResponse()` : "null") : "returnedBody"}, ${responseContainsHeaders && code`returnedBody.getHeaders(), `}${springFramework.HttpStatus}.valueOf(${statusCode as number}));
+                          return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(${responseContainsHeaders ? (responseBodyType !== undefined ? code`returnedBody.getResponse(), ` : "") : "returnedBody, "}${responseContainsHeaders && code`returnedBody.getHeaders(), `}${springFramework.HttpStatus}.valueOf(${statusCode as number}));
                         `
                           : code`
                           ${serviceAccessor}.${op.operation?.name}(${paramNames.join(", ")});
@@ -306,15 +292,14 @@ export function emitServices(ops: Record<string, OperationsGroup>) {
                     //   to specify the error that should be thrown if any
 
                     const nonErrorResponses = getNonErrorResponses(op);
+                    const errorResponses = getErrorResponses(op);
                     const requiresCustomModel = nonErrorResponses.length > 1;
 
                     const response: FlatHttpResponse = $.httpOperation.getResponses(
                       op.operation,
                     )[0];
-
                     const responseBodyType = response.responseContent.body?.type;
 
-                    const errorResponses = getErrorResponses(op);
                     const throwsClause = mapJoin(
                       errorResponses,
                       (res) => {
@@ -326,11 +311,11 @@ export function emitServices(ops: Record<string, OperationsGroup>) {
                     );
 
                     // If response contains headers, wrap with ResponseWithHeaders class
-                    const responseContainsHeaders = $.httpOperation
-                      .getResponses(op.operation)
-                      .some((res) => {
-                        return Object.keys(res?.responseContent?.headers ?? {}).length > 0;
+                    const responseContainsHeaders = op.responses.some((res) => {
+                      return res.responses.some((res2) => {
+                        return Object.keys(res2?.headers ?? {}).length > 0;
                       });
+                    });
 
                     const responseModel = requiresCustomModel ? (
                       refkey(getCustomResponseModelName(op))

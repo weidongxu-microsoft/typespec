@@ -30,8 +30,9 @@ export function emitResponseModels(ops: HttpOperation[]) {
                 return Object.values(res?.headers ?? [])?.length ?? 0 > 0;
               });
               const bodyType = res?.responses?.[0]?.body?.type;
-              // @ts-expect-error Might not exist
-              const name = bodyType?.name ?? res?.type?.name ?? "noBody";
+              const name =
+                // @ts-expect-error Might not exist
+                bodyType?.indexer?.value?.name ?? bodyType?.name ?? res?.type?.name ?? "noBody";
               const returnType = !bodyType ? refkey("NoBody") : <TypeExpression type={bodyType} />;
               // prettier-ignore
               const finalReturnType = requiresHeaders ? (
@@ -39,8 +40,6 @@ export function emitResponseModels(ops: HttpOperation[]) {
                     {refkey("ResponseWithHeaders")}<jv.Generics types={[returnType]} />
                 </>
               ) : returnType;
-              // const responseModel = bodyType as Model;
-              // const inBuiltResponse = bodyType ? isNoEmit(bodyType) : false;
 
               return <jv.Variable private type={finalReturnType} name={name} />;
             },
@@ -58,14 +57,11 @@ export function emitResponseModels(ops: HttpOperation[]) {
                 return Object.values(res?.headers ?? [])?.length ?? 0 > 0;
               });
               const bodyType = res?.responses?.[0]?.body?.type;
-              // if (bodyType?.kind !== "Model") return;
-              // const responseModel = bodyType as Model;
-              //
-              // const inBuiltResponse = isNoEmit(responseModel);
 
               const returnType = !bodyType ? refkey("NoBody") : <TypeExpression type={bodyType} />;
-              // @ts-expect-error Might not exist
-              const name = bodyType?.name ?? res?.type?.name ?? "noBody";
+              const name =
+                // @ts-expect-error Might not exist
+                bodyType?.indexer?.value?.name ?? bodyType?.name ?? res?.type?.name ?? "noBody";
               const variableName = useJavaNamePolicy().getName(name, "variable");
               // prettier-ignore
               const finalReturnType = requiresHeaders ? (
@@ -111,6 +107,7 @@ export function emitResponseModels(ops: HttpOperation[]) {
  */
 export function getNonErrorResponses(op: HttpOperation) {
   return op.responses.filter((res) => {
+    if (res?.type?.kind !== "Model") return false;
     const responseModel = res.type as Model;
     return !$.model.isErrorModel(responseModel);
   });
@@ -123,6 +120,7 @@ export function getNonErrorResponses(op: HttpOperation) {
  */
 export function getErrorResponses(op: HttpOperation) {
   return op.responses.filter((res) => {
+    if (res?.type?.kind !== "Model") return false;
     const responseModel = res.type as Model;
     return $.model.isErrorModel(responseModel);
   });

@@ -57,7 +57,7 @@ namespace Pets {
   op list(@query nextLink?: string): ResponsePage<Pet> | Error;
 
   @doc("Returns a pet. Supports eTags.")
-  op read(...PetId): Pet | (NotModifiedResponse & Pet) | Error;
+  op read(...PetId): Pet | Error;
 
   @post op create(@body pet: Pet): Pet | Error;
 }
