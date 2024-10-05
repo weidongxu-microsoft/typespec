@@ -1,5 +1,4 @@
 import * as ay from "@alloy-js/core";
-import { code } from "@alloy-js/core";
 import * as jv from "@alloy-js/java";
 import { createJavaNamePolicy, javaUtil, MavenProjectConfig } from "@alloy-js/java";
 import { $, EmitContext, getNamespaceFullName, isStdNamespace, Type } from "@typespec/compiler";
@@ -13,6 +12,7 @@ import {
 } from "@typespec/http";
 import { emitOperations, emitServices, OperationsGroup } from "./common/index.js";
 import { emitResponseModels } from "./common/responses.js";
+import { NoBody, ResponseWithHeaders } from "./components/index.js";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
 
@@ -114,16 +114,8 @@ export async function $onEmit(context: EmitContext) {
                   </jv.SourceFile>
                 );
               })}
-            <jv.SourceFile path="NoBody.java">
-              {code`
-                /**
-                * Represents a response with no body. Used for custom response classes
-                */
-              `}
-              <jv.Class public name={"NoBody"}>
-                <jv.Constructor public></jv.Constructor>
-              </jv.Class>
-            </jv.SourceFile>
+            <NoBody />
+            <ResponseWithHeaders />
           </jv.PackageDirectory>
           <jv.PackageDirectory package="controllers">
             {emitOperations(httpOperations)}

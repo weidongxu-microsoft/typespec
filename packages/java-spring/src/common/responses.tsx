@@ -4,7 +4,6 @@ import { useJavaNamePolicy } from "@alloy-js/java";
 import { $, Model } from "@typespec/compiler";
 import { TypeExpression } from "@typespec/emitter-framework/java";
 import { HttpOperation } from "@typespec/http";
-import { isNoEmit } from "../emitter.js";
 
 /**
  * Emit models used for custom response types
@@ -12,6 +11,7 @@ import { isNoEmit } from "../emitter.js";
  * @param ops Operations in the program
  */
 export function emitResponseModels(ops: HttpOperation[]) {
+  // Determine the http operations that we need a custom response for
   const customResponseOperations = ops.filter((op) => {
     return getNonErrorResponses(op).length > 1;
   });
@@ -26,19 +26,23 @@ export function emitResponseModels(ops: HttpOperation[]) {
           {mapJoin(
             nonErrorResponses,
             (res) => {
-              if (res.type.kind !== "Model") return;
-              const responseModel = res.type as Model;
-              const inBuiltResponse = isNoEmit(responseModel);
+              const requiresHeaders = res.responses.some((res) => {
+                return Object.values(res?.headers ?? [])?.length ?? 0 > 0;
+              });
+              const bodyType = res?.responses?.[0]?.body?.type;
+              // @ts-expect-error Might not exist
+              const name = bodyType?.name ?? res?.type?.name ?? "noBody";
+              const returnType = !bodyType ? refkey("NoBody") : <TypeExpression type={bodyType} />;
+              // prettier-ignore
+              const finalReturnType = requiresHeaders ? (
+                <>
+                    {refkey("ResponseWithHeaders")}<jv.Generics types={[returnType]} />
+                </>
+              ) : returnType;
+              // const responseModel = bodyType as Model;
+              // const inBuiltResponse = bodyType ? isNoEmit(bodyType) : false;
 
-              return (
-                <jv.Variable
-                  private
-                  type={
-                    inBuiltResponse ? refkey("NoBody") : <TypeExpression type={responseModel} />
-                  }
-                  name={responseModel.name}
-                />
-              );
+              return <jv.Variable private type={finalReturnType} name={name} />;
             },
             {
               joiner: "\n",
@@ -50,28 +54,39 @@ export function emitResponseModels(ops: HttpOperation[]) {
           {mapJoin(
             nonErrorResponses,
             (res) => {
-              if (res.type.kind !== "Model") return;
-              const responseModel = res.type as Model;
-              const inBuiltResponse = isNoEmit(responseModel);
+              const requiresHeaders = res.responses.some((res) => {
+                return Object.values(res?.headers ?? [])?.length ?? 0 > 0;
+              });
+              const bodyType = res?.responses?.[0]?.body?.type;
+              // if (bodyType?.kind !== "Model") return;
+              // const responseModel = bodyType as Model;
+              //
+              // const inBuiltResponse = isNoEmit(responseModel);
 
-              const returnType = inBuiltResponse ? (
-                refkey("NoBody")
+              const returnType = !bodyType ? refkey("NoBody") : <TypeExpression type={bodyType} />;
+              // @ts-expect-error Might not exist
+              const name = bodyType?.name ?? res?.type?.name ?? "noBody";
+              const variableName = useJavaNamePolicy().getName(name, "variable");
+              // prettier-ignore
+              const finalReturnType = requiresHeaders ? (
+                <>
+                  {refkey("ResponseWithHeaders")}<jv.Generics types={[returnType]} />
+                </>
               ) : (
-                <TypeExpression type={responseModel} />
+                returnType
               );
-              const variableName = useJavaNamePolicy().getName(responseModel.name, "variable");
 
               return (
                 <>
-                  <jv.Method name={"get" + responseModel.name} public return={returnType}>
+                  <jv.Method name={"get" + name} public return={finalReturnType}>
                     return this.{variableName};
                   </jv.Method>
 
                   <jv.Method
-                    name={"set" + responseModel.name}
+                    name={"set" + name}
                     public
                     parameters={{
-                      value: returnType,
+                      value: finalReturnType,
                     }}
                   >
                     this.{variableName} = value;

@@ -120,6 +120,26 @@ export function emitOperations(ops: Record<string, OperationsGroup>) {
                   const statusCode = response.statusCode;
 
                   const responseBodyType = response.responseContent.body?.type;
+                  // If response contains headers, wrap with ResponseWithHeaders class
+                  const responseContainsHeaders = op.responses.some((res) => {
+                    return res.responses.some((res2) => {
+                      return Object.keys(res2?.headers ?? {}).length > 0;
+                    });
+                  });
+
+                  // @ts-expect-error Might not exist
+                  const name = responseBodyType?.name ?? "noBody";
+                  const returnType = !responseBodyType ? (
+                    refkey("NoBody")
+                  ) : (
+                    <TypeExpression type={responseBodyType} />
+                  );
+                  // prettier-ignore
+                  const finalReturnType = responseContainsHeaders ? (
+                    <>
+                      {refkey("ResponseWithHeaders")}<jv.Generics types={[returnType]} />
+                    </>
+                  ) : returnType;
 
                   const errorResponses = getErrorResponses(op);
 
@@ -133,9 +153,28 @@ export function emitOperations(ops: Record<string, OperationsGroup>) {
                             (res) => {
                               const responseModel = res.type as Model;
                               const inBuiltResponse = isNoEmit(responseModel);
+
+                              const requiresHeaders = res.responses.some((res) => {
+                                return Object.values(res?.headers ?? [])?.length ?? 0 > 0;
+                              });
+                              const bodyType = res?.responses?.[0]?.body?.type;
+                              // @ts-expect-error Might not exist
+                              const name = bodyType?.name ?? res?.type?.name ?? "noBody";
+                              const returnType = !bodyType ? (
+                                refkey("NoBody")
+                              ) : (
+                                <TypeExpression type={bodyType} />
+                              );
+                              // prettier-ignore
+                              const finalReturnType = requiresHeaders ? (
+                                <>
+                                  {refkey("ResponseWithHeaders")}<jv.Generics types={[returnType]} />
+                                </>
+                              ) : returnType;
+
                               return code`
-                                if (returnedBody.get${responseModel.name}() != null) {
-                                  return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(${!inBuiltResponse && code`returnedBody.get${responseModel.name}(), `}${springFramework.HttpStatus}.valueOf(${res.statusCodes as number}));
+                                if (returnedBody.get${name}() != null) {
+                                  return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(${bodyType !== undefined && code`returnedBody.get${name}()${requiresHeaders && code`.getResponse()`}, `}${requiresHeaders && code`returnedBody.get${name}().getHeaders(), `}${springFramework.HttpStatus}.valueOf(${res.statusCodes as number}));
                                 }
                               `;
                             },
@@ -145,10 +184,10 @@ export function emitOperations(ops: Record<string, OperationsGroup>) {
                           )}
                           return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(${springFramework.HttpStatus}.valueOf(${statusCode as number}));
                         `
-                        : responseBodyType != null
+                        : responseBodyType !== undefined || responseContainsHeaders
                           ? code`
-                          ${(<TypeExpression type={responseBodyType} />)} returnedBody = ${serviceAccessor}.${op.operation?.name}(${paramNames.join(", ")});
-                          return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(returnedBody, ${springFramework.HttpStatus}.valueOf(${statusCode as number}));
+                          ${finalReturnType} returnedBody = ${serviceAccessor}.${op.operation?.name}(${paramNames.join(", ")});
+                          return new ${springFramework.ResponseEntity}${(<jv.Generics />)}(${responseContainsHeaders ? (responseBodyType !== undefined ? code`returnedBody.getResponse()` : "null") : "returnedBody"}, ${responseContainsHeaders && code`returnedBody.getHeaders(), `}${springFramework.HttpStatus}.valueOf(${statusCode as number}));
                         `
                           : code`
                           ${serviceAccessor}.${op.operation?.name}(${paramNames.join(", ")});
@@ -286,18 +325,33 @@ export function emitServices(ops: Record<string, OperationsGroup>) {
                       },
                     );
 
+                    // If response contains headers, wrap with ResponseWithHeaders class
+                    const responseContainsHeaders = $.httpOperation
+                      .getResponses(op.operation)
+                      .some((res) => {
+                        return Object.keys(res?.responseContent?.headers ?? {}).length > 0;
+                      });
+
+                    const responseModel = requiresCustomModel ? (
+                      refkey(getCustomResponseModelName(op))
+                    ) : responseBodyType ? (
+                      <TypeExpression type={responseBodyType} />
+                    ) : undefined;
+
+                    // Only use reponse with headers wrappes if doesn't require custom reponse model
+                    // prettier-ignore
+                    const finalResponseModel = responseContainsHeaders && !requiresCustomModel ? (
+                      <>
+                        {refkey("ResponseWithHeaders")}<jv.Generics types={[responseModel ? responseModel : refkey('NoBody')]} />
+                      </>
+                    ) : responseModel;
+
                     return (
                       <jv.Method
                         name={op.operation?.name}
                         throws={errorResponses.length >= 1 ? throwsClause : undefined}
                         // Interface will usually always return the type of our body, and void if body is undefined
-                        return={
-                          requiresCustomModel ? (
-                            refkey(getCustomResponseModelName(op))
-                          ) : responseBodyType ? (
-                            <TypeExpression type={responseBodyType} />
-                          ) : undefined
-                        }
+                        return={finalResponseModel}
                         parameters={params}
                       />
                     );

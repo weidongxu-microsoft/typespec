@@ -23,6 +23,7 @@ export const springFramework = createLibrary({
     ],
     "org.springframework.beans.factory.annotation": ["Autowired"],
     "org.springframework.http": ["HttpStatus", "ResponseEntity"],
+    "org.springframework.util": ["MultiValueMap"],
     "com.fasterxml.jackson.annotation": ["JsonIgnoreProperties"],
   },
 });

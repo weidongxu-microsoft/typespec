@@ -19,7 +19,10 @@ namespace DemoService {
       pets: Pets.Pet[];
     }
 
-    @get op getPerson(@path id: int32): Person<string> | NotFoundResponse | CustomError;
+    @get op getPerson(@path id: int32): {
+      @body body: Person<string>;
+      @header testHeader: string;
+    } | NotFoundResponse | CustomError;
     @get op listPeople(): Person<string>[] | CustomError;
     @post op createPerson(@body person: Person<string>): CreatedResponse | CustomError;
   }
@@ -31,6 +34,12 @@ namespace DemoService {
       owner?: People.Person<int32>;
     }
 
-    op listPets(): Pet[] | CustomError;
+    op listPets(): {
+     @body body: Pet[];
+     @header x: string;
+    } | CustomError;
+    @put op listPets2(): {
+      @header noBodyHeader: string;
+    };
   }
 }
