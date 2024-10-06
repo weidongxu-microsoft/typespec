@@ -96,19 +96,17 @@ export async function $onEmit(context: EmitContext) {
                   <ModelDeclaration type={type} />
                 </jv.SourceFile>
               ))}
+            {types.dataTypes
+              .filter((type) => type.kind === "Enum")
+              .map((type) => (
+                <jv.SourceFile path={type.name + ".java"}>
+                  <EnumDeclaration type={type} />
+                </jv.SourceFile>
+              ))}
           </jv.PackageDirectory>
           <jv.PackageDirectory package="controllers">
             {emitOperations(context, httpOperations)}
           </jv.PackageDirectory>
-        </jv.PackageDirectory>
-        <jv.PackageDirectory package="enums">
-          {types.dataTypes
-            .filter((type) => type.kind === "Enum")
-            .map((type) => (
-              <jv.SourceFile path={type.name + ".java"}>
-                <EnumDeclaration type={type} />
-              </jv.SourceFile>
-            ))}
         </jv.PackageDirectory>
       </SpringProject>
     </ay.Output>

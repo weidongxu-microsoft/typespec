@@ -34,14 +34,16 @@ export function EnumDeclaration({ type }: EnumProps) {
   let constructor = null;
   let variable = null;
   if (valueType) {
-    variable = <jv.Variable type={valueType} name="customValue" private={true}/>;
-    constructor = <jv.Constructor name={type.name} parameters={{"customValue": valueType}}
-                                  children={"this.customValue = customValue;"} private={true}/>;
+    variable = <jv.Variable type={valueType} name="value" private={true}/>;
+    constructor = <jv.Constructor name={type.name} parameters={{value: valueType}} private>
+        this.value = value;
+      </jv.Constructor>;
   }
 
   const joinedMembers = mapJoin(members, (member) => {
-    const customValue = member.value ? <jv.Value value={member.value}/> : null;
-    return <jv.EnumMember name={member.name} arguments={customValue}/>
+    const value = member.value ? <jv.Value value={member.value}/> : "null";
+    const name = member.name.replace(/\s+/g, '');
+    return <jv.EnumMember name={name} arguments={value}/>
   }, { joiner: ",\n" });
 
 
