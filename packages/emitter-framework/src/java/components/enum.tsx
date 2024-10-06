@@ -49,8 +49,7 @@ export function EnumDeclaration({ type }: EnumProps) {
     } else {
       value = "";
     }
-    const name = member.name.replace(/\s+/g, '');
-    return <jv.EnumMember name={name} arguments={value}/>
+    return <jv.EnumMember name={member.name} arguments={value}/>
   }, { joiner: ",\n" });
 
 
