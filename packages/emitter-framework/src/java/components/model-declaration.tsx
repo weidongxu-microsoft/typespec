@@ -1,12 +1,13 @@
 import { Children, refkey as getRefkey, mapJoin } from "@alloy-js/core";
-import { Class, useJavaNamePolicy } from "@alloy-js/java";
-import { getParentTemplateNode, Model, ModelProperty } from "@typespec/compiler";
+import { Class, Generics, useJavaNamePolicy } from "@alloy-js/java";
+import { getParentTemplateNode, Model, ModelProperty, Type } from "@typespec/compiler";
 import { getTemplateParams } from "../utils.js";
 import { Getter } from "./getter.js";
 import { ModelConstructor } from "./model-constructor.js";
 import { ModelMember } from "./model-member.js";
 import { Setter } from "./setter.js";
 import { join } from "path";
+import { intrinsicNameToJavaType, TypeExpression } from "./type-expression.js";
 
 export interface ModelDeclarationProps {
   type: Model;
@@ -30,17 +31,22 @@ export function ModelDeclaration({
   generics?.forEach((generic) => (genericObject[generic] = ""));
   const refkey = getRefkey(type);
 
+
+
   const baseModel = type.baseModel;
-  const templateArgs = type.templateMapper ? type.templateMapper?.args : [];
 
-  if (baseModel && type.node) {
-    const typeMapper = baseModel.templateArguments;
+  const genericArgs = baseModel ? baseModel.templateMapper?.args : [];
+  const genericsString =
+    (genericArgs?.length ?? 0) > 0 ? (
+      <Generics types={genericArgs?.map((gen) => <TypeExpression type={gen as Type} />)} />
+    ) : (
+      ""
+    );
 
 
-    console.log(type.name, typeMapper);
+  const baseModelExpression = baseModel ? baseModel.name : "";
+  const extendsExpression = <>{baseModelExpression}{genericsString}</>;
 
-  }
-  const extendsExpression = baseModel ? getRefkey(baseModel) : "";
 
   return (
     <Class
@@ -48,7 +54,7 @@ export function ModelDeclaration({
       name={name}
       refkey={refkey}
       generics={generics?.length !== 0 ? genericObject : undefined}
-      extends={extendsExpression}
+      extends={baseModel ? extendsExpression : undefined}
     >
       {""}
       {mapJoin(
