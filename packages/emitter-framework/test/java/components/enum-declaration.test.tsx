@@ -58,6 +58,11 @@ describe("Typespec Enum Declaration", () => {
         WEST("west");
         
         private String value;
+        
+        public String getValue() {
+          return this.value;
+        }
+        
         private Direction(String value) {
           this.value = value;
         }
@@ -90,6 +95,11 @@ describe("Typespec Enum Declaration", () => {
         THOUSAND(1000);
         
         private int value;
+        
+        public int getValue() {
+          return this.value;
+        }
+        
         private Foo(int value) {
           this.value = value;
         }
@@ -122,6 +132,11 @@ describe("Typespec Enum Declaration", () => {
         THOUSAND(1000);
         
         private int value;
+        
+        public int getValue() {
+          return this.value;
+        }
+        
         private Foo(int value) {
           this.value = value;
         }
