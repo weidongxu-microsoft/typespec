@@ -3,7 +3,7 @@ import * as jv from "@alloy-js/java";
 import { createJavaNamePolicy, javaUtil, MavenProjectConfig } from "@alloy-js/java";
 import { $, EmitContext, getNamespaceFullName, isStdNamespace, Type } from "@typespec/compiler";
 import { TypeCollector } from "@typespec/emitter-framework";
-import { ModelDeclaration } from "@typespec/emitter-framework/java";
+import { EnumDeclaration, ModelDeclaration } from "@typespec/emitter-framework/java";
 import {
   getAllHttpServices,
   namespace as HttpNamespace,
@@ -117,6 +117,15 @@ export async function $onEmit(context: EmitContext) {
                       />
                     )}
                     <ModelDeclaration type={type} />
+                  </jv.SourceFile>
+                );
+              })}
+            {types.dataTypes
+              .filter((type) => type.kind === "Enum")
+              .map((type) => {
+                return (
+                  <jv.SourceFile path={type.name + ".java"}>
+                    <EnumDeclaration type={type} />
                   </jv.SourceFile>
                 );
               })}
