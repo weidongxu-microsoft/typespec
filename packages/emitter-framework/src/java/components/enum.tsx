@@ -15,13 +15,15 @@ export function EnumDeclaration({ type }: EnumProps) {
   let valueType: string | undefined;
   let isConsistent = true;
 
+
   members.forEach((member, index) => {
-    if (member.value !== undefined) {
+    if (member.value !== undefined && member.value !== null) {
       const currentType = typeof member.value === "string" ? "String" : "int";
 
-      if (index === 0) {
+      if (valueType === undefined) {
         valueType = currentType;
-      } else if (valueType !== currentType) {
+      }
+      else if (valueType !== currentType) {
         isConsistent = false;
       }
     }
@@ -41,7 +43,12 @@ export function EnumDeclaration({ type }: EnumProps) {
   }
 
   const joinedMembers = mapJoin(members, (member) => {
-    const value = member.value ? <jv.Value value={member.value}/> : "null";
+    let value;
+    if (valueType) {
+       value = member.value ? <jv.Value value={member.value}/> : "null";
+    } else {
+      value = "";
+    }
     const name = member.name.replace(/\s+/g, '');
     return <jv.EnumMember name={name} arguments={value}/>
   }, { joiner: ",\n" });

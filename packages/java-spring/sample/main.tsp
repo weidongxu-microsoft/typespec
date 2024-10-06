@@ -7,12 +7,17 @@ namespace People {
   }
 
 enum Direction {
-  North: "north",
+  North,
   East: "east",
   South: "south",
   West: "west",
 }
-
+enum Foo {
+  One: 1,
+  Ten: 10,
+  Hundred: 100,
+  Thousand: 1000,
+}
 enum DirectionExt {
   ...Direction,
   `North East`,
