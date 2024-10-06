@@ -6,7 +6,7 @@ namespace People {
     special: T;
   }
 
-  model Adult extends Person<int32> {
+  model Adult<T> extends Person<T> {
     age: int32;
   }
 

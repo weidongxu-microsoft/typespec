@@ -1,13 +1,13 @@
 import { Children, refkey as getRefkey, mapJoin } from "@alloy-js/core";
 import { Class, Generics, useJavaNamePolicy } from "@alloy-js/java";
-import { getParentTemplateNode, Model, ModelProperty, Type } from "@typespec/compiler";
+import { Model, ModelProperty, TemplateParameter, Type } from "@typespec/compiler";
 import { getTemplateParams } from "../utils.js";
 import { Getter } from "./getter.js";
 import { ModelConstructor } from "./model-constructor.js";
 import { ModelMember } from "./model-member.js";
 import { Setter } from "./setter.js";
-import { join } from "path";
-import { intrinsicNameToJavaType, TypeExpression } from "./type-expression.js";
+import { TypeExpression } from "./type-expression.js";
+import * as jv from "@alloy-js/java"
 
 export interface ModelDeclarationProps {
   type: Model;
@@ -36,16 +36,17 @@ export function ModelDeclaration({
   const baseModel = type.baseModel;
 
   const genericArgs = baseModel ? baseModel.templateMapper?.args : [];
-  const genericsString =
+
+  const baseModelGenericsString =
     (genericArgs?.length ?? 0) > 0 ? (
       <Generics types={genericArgs?.map((gen) => <TypeExpression type={gen as Type} />)} />
-    ) : (
-      ""
-    );
+    ) : "";
+
+  const genericsString = generics ? `<${generics.join(", ")}> `: "";
 
 
   const baseModelExpression = baseModel ? baseModel.name : "";
-  const extendsExpression = <>{baseModelExpression}{genericsString}</>;
+  const extendsExpression = <>{baseModelExpression}{generics?.length ? genericsString : baseModelGenericsString}</>;
 
 
   return (
