@@ -22,5 +22,8 @@ export const springFramework = createLibrary({
       "RequestParam",
     ],
     "org.springframework.beans.factory.annotation": ["Autowired"],
+    "org.springframework.http": ["HttpStatus", "ResponseEntity"],
+    "org.springframework.util": ["MultiValueMap"],
+    "com.fasterxml.jackson.annotation": ["JsonIgnoreProperties"],
   },
 });
