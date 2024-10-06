@@ -1,11 +1,11 @@
 import { d } from "@alloy-js/core/testing";
-import { Model } from "@typespec/compiler";
+import { Model, Namespace } from "@typespec/compiler";
 import { describe, expect, it } from "vitest";
 import { ModelDeclaration } from "../../../src/java/index.js";
 import { getEmitOutput } from "../utils.js";
 
 describe("TypeSpec Model Declaration", () => {
-  it("Take a model type parameter", async () => {
+  it("Takes a model type parameter", async () => {
     const code = `
         model Widget {
           id: string;
@@ -27,6 +27,10 @@ describe("TypeSpec Model Declaration", () => {
         private String id;
         private Integer weight;
         private String color;
+        
+        public Widget() {
+          
+        }
         
         public Widget(String id, Integer weight, String color) {
           this.id = id;
@@ -56,6 +60,58 @@ describe("TypeSpec Model Declaration", () => {
         
         public void setColor(String color) {
           this.color = color;
+        }
+        
+      }
+    `);
+  });
+
+  it("Takes a generic model type parameter", async () => {
+    const code = `
+        namespace DemoService;
+        model Widget<T> {
+          id: string;
+          item: T;
+        }
+    `;
+
+    const output = await getEmitOutput(code, (program) => {
+      const [namespace] = program.resolveTypeReference("DemoService");
+      const Foo = Array.from((namespace as Namespace).models.values())[0];
+      return <ModelDeclaration type={Foo} />;
+    });
+
+    expect(output).toBe(d`
+      package me.test.code;
+      
+      public class Widget<T> {
+        
+        private String id;
+        private T item;
+        
+        public Widget() {
+          
+        }
+        
+        public Widget(String id, T item) {
+          this.id = id;
+          this.item = item;
+        }
+        
+        public String getId() {
+          return this.id;
+        }
+        
+        public void setId(String id) {
+          this.id = id;
+        }
+        
+        public T getItem() {
+          return this.item;
+        }
+        
+        public void setItem(T item) {
+          this.item = item;
         }
         
       }

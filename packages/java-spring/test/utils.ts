@@ -15,9 +15,9 @@ export async function getEmitOutput(tspCode: string, cb: (program: Program) => C
   const res = render(
     Output({ externals: [javaUtil, springFramework] }).children(
       PackageDirectory({ package: "me.test.code" }).children(
-        SourceFile({ path: "Test.java" }).children(cb(program))
-      )
-    )
+        SourceFile({ path: "Test.java" }).children(cb(program)),
+      ),
+    ),
   );
   const testFile = findFile(res, "Test.java");
 
