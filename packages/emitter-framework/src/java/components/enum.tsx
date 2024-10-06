@@ -2,6 +2,7 @@ import { Enum } from "@typespec/compiler";
 import * as jv from  "@alloy-js/java"
 import { mapJoin } from "@alloy-js/core";
 import { TypeExpression } from "../../typescript/index.js";
+import { Getter } from "./getter.js";
 
 
 export interface EnumProps {
@@ -35,8 +36,13 @@ export function EnumDeclaration({ type }: EnumProps) {
 
   let constructor = null;
   let variable = null;
+  let getter = null;
   if (valueType) {
     variable = <jv.Variable type={valueType} name="value" private={true}/>;
+    getter = <jv.Method name={"getValue"} return={valueType} public>
+        return this.value;
+       </jv.Method>
+
     constructor = <jv.Constructor name={type.name} parameters={{value: valueType}} private>
         this.value = value;
       </jv.Constructor>;
@@ -58,6 +64,9 @@ export function EnumDeclaration({ type }: EnumProps) {
     {joinedMembers};
 
     {variable}
+
+    {getter}
+
     {constructor}
   </jv.Enum> : <jv.Enum name={type.name}>
     {joinedMembers}
