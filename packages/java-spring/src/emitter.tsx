@@ -9,8 +9,9 @@ import {
   namespace as HttpNamespace,
   HttpOperation,
   HttpService,
+  resolveAuthentication,
 } from "@typespec/http";
-import { emitOperations, emitServices, OperationsGroup } from "./common/index.js";
+import { emitAuth, emitOperations, emitServices, OperationsGroup } from "./common/index.js";
 import { emitResponseModels } from "./common/responses.js";
 import { NoBody, ResponseWithHeaders } from "./components/index.js";
 import { SpringProject } from "./spring/components/index.js";
@@ -77,6 +78,11 @@ export async function $onEmit(context: EmitContext) {
     });
   });
 
+  // Obtain auth scheme
+  // For now we are only obtaining auth on the first service, and are taking the first auth scheme.
+  // Currently not supporting multiple auth schemes or per operation overrides.
+  const auth = resolveAuthentication(services[0][0] as HttpService);
+
   const outputDir = context.emitterOutputDir;
   return (
     <ay.Output
@@ -123,6 +129,7 @@ export async function $onEmit(context: EmitContext) {
           <jv.PackageDirectory package="responses">
             {emitResponseModels(serviceOperations)}
           </jv.PackageDirectory>
+          {emitAuth(auth)}
         </jv.PackageDirectory>
       </SpringProject>
     </ay.Output>
