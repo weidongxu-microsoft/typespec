@@ -1,11 +1,12 @@
 import { Children, refkey as getRefkey, mapJoin } from "@alloy-js/core";
 import { Class, useJavaNamePolicy } from "@alloy-js/java";
-import { Model, ModelProperty } from "@typespec/compiler";
+import { getParentTemplateNode, Model, ModelProperty } from "@typespec/compiler";
 import { getTemplateParams } from "../utils.js";
 import { Getter } from "./getter.js";
 import { ModelConstructor } from "./model-constructor.js";
 import { ModelMember } from "./model-member.js";
 import { Setter } from "./setter.js";
+import { join } from "path";
 
 export interface ModelDeclarationProps {
   type: Model;
@@ -14,7 +15,6 @@ export interface ModelDeclarationProps {
 
 /**
  * Generate basic java class for a model
- * TODO: Handle extending other models
  */
 export function ModelDeclaration({
   type,
@@ -31,6 +31,15 @@ export function ModelDeclaration({
   const refkey = getRefkey(type);
 
   const baseModel = type.baseModel;
+  const templateArgs = type.templateMapper ? type.templateMapper?.args : [];
+
+  if (baseModel && type.node) {
+    const typeMapper = baseModel.templateArguments;
+
+
+    console.log(type.name, typeMapper);
+
+  }
   const extendsExpression = baseModel ? getRefkey(baseModel) : "";
 
   return (
