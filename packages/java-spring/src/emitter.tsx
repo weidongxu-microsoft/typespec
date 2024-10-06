@@ -114,6 +114,15 @@ export async function $onEmit(context: EmitContext) {
                   </jv.SourceFile>
                 );
               })}
+            {types.dataTypes
+              .filter((type) => type.kind === "Enum")
+              .map((type) => {
+                return (
+                  <jv.SourceFile path={type.name + ".java"}>
+                    <EnumDeclaration type={type} />
+                  </jv.SourceFile>
+                );
+              })}
             <NoBody />
             <ResponseWithHeaders />
           </jv.PackageDirectory>
