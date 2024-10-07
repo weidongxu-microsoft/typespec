@@ -1,14 +1,12 @@
 import { Children, refkey as getRefkey, mapJoin } from "@alloy-js/core";
-import { Class, Generics, useJavaNamePolicy } from "@alloy-js/java";
-import { Model, ModelProperty, TemplateParameter, Type } from "@typespec/compiler";
-import { $, Model, ModelProperty } from "@typespec/compiler";
+import { Class, Constructor, Generics, useJavaNamePolicy } from "@alloy-js/java";
+import { $, Model, ModelProperty, Type } from "@typespec/compiler";
 import { getTemplateParams } from "../utils.js";
 import { Getter } from "./getter.js";
 import { ModelConstructor } from "./model-constructor.js";
 import { ModelMember } from "./model-member.js";
 import { Setter } from "./setter.js";
 import { TypeExpression } from "./type-expression.js";
-import * as jv from "@alloy-js/java"
 
 export interface ModelDeclarationProps {
   type: Model;
@@ -34,8 +32,6 @@ export function ModelDeclaration({
   generics?.forEach((generic) => (genericObject[generic] = ""));
   const refkey = getRefkey(type);
 
-
-
   const baseModel = type.baseModel;
 
   const genericArgs = baseModel ? baseModel.templateMapper?.args : [];
@@ -43,14 +39,19 @@ export function ModelDeclaration({
   const baseModelGenericsString =
     (genericArgs?.length ?? 0) > 0 ? (
       <Generics types={genericArgs?.map((gen) => <TypeExpression type={gen as Type} />)} />
-    ) : "";
+    ) : (
+      ""
+    );
 
-  const genericsString = generics ? `<${generics.join(", ")}> `: "";
-
+  const genericsString = generics ? `<${generics.join(", ")}> ` : "";
 
   const baseModelExpression = baseModel ? baseModel.name : "";
-  const extendsExpression = <>{baseModelExpression}{generics?.length ? genericsString : baseModelGenericsString}</>;
-
+  const extendsExpression = (
+    <>
+      {baseModelExpression}
+      {generics?.length ? genericsString : baseModelGenericsString}
+    </>
+  );
 
   const isErrorModel = $.model.isErrorModel(type);
 
@@ -60,7 +61,7 @@ export function ModelDeclaration({
       name={name}
       refkey={refkey}
       generics={generics?.length !== 0 ? genericObject : undefined}
-      extends={baseModel ? extendsExpression : undefined}
+      extends={isErrorModel ? "Exception" : baseModel ? extendsExpression : undefined}
     >
       {""}
       {mapJoin(
