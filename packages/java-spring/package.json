@@ -20,19 +20,18 @@
   "peerDependencies": {
     "@typespec/compiler": "workspace:*",
     "@typespec/http": "workspace:*",
-    "@typespec/rest": "workspace:*"
+    "@typespec/rest": "workspace:*",
+    "@typespec/emitter-framework": "workspace:*"
   },
   "dependencies": {
-    "@alloy-js/core": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/core@010db0c",
-    "@alloy-js/java": "https://pkg.pr.new/IlluzionzDev/alloy/@alloy-js/java@010db0c",
-    "@typespec/emitter-framework": "workspace:*",
-    "change-case": "~5.4.4"
+    "@alloy-js/core": "0.3.0",
+    "@alloy-js/java": "0.3.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.24.8",
-    "@babel/core": "^7.24.9",
+    "@babel/cli": "^7.25.6",
+    "@babel/core": "^7.25.2",
     "@rollup/plugin-babel": "^6.0.4",
-    "babel-preset-alloy": "https://pkg.pr.new/IlluzionzDev/alloy/babel-preset-alloy@010db0c",
+    "@alloy-js/babel-preset": "0.1.1",
     "concurrently": "^8.2.2",
     "typescript": "^5.5.3",
     "vitest": "^2.0.3"

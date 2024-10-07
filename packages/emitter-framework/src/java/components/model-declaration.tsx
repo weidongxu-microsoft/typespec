@@ -1,6 +1,7 @@
 import { Children, refkey as getRefkey, mapJoin } from "@alloy-js/core";
 import { Class, Generics, useJavaNamePolicy } from "@alloy-js/java";
 import { Model, ModelProperty, TemplateParameter, Type } from "@typespec/compiler";
+import { $, Model, ModelProperty } from "@typespec/compiler";
 import { getTemplateParams } from "../utils.js";
 import { Getter } from "./getter.js";
 import { ModelConstructor } from "./model-constructor.js";
@@ -23,7 +24,9 @@ export function ModelDeclaration({
 }: ModelDeclarationProps) {
   const namePolicy = useJavaNamePolicy();
 
-  const properties = Array.from(type.properties.values());
+  const properties = Array.from(type?.properties?.values() ?? []).filter((p) => {
+    return !p.decorators?.some((d) => d.definition?.name === "@statusCode");
+  });
 
   const name = namePolicy.getName(type.name, "class");
   const generics = type.node ? getTemplateParams(type.node) : undefined;
@@ -49,6 +52,8 @@ export function ModelDeclaration({
   const extendsExpression = <>{baseModelExpression}{generics?.length ? genericsString : baseModelGenericsString}</>;
 
 
+  const isErrorModel = $.model.isErrorModel(type);
+
   return (
     <Class
       public
@@ -63,8 +68,10 @@ export function ModelDeclaration({
         (property) => {
           return propertyComponent(property);
         },
-        { joiner: "\n" }
+        { joiner: "\n" },
       )}
+
+      {properties.length !== 0 && <Constructor public />}
 
       <ModelConstructor type={type} />
 
@@ -79,7 +86,7 @@ export function ModelDeclaration({
             </>
           );
         },
-        { joiner: "\n\n" }
+        { joiner: "\n\n" },
       )}
       {""}
     </Class>

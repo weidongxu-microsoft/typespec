@@ -1,32 +1,47 @@
 import "@typespec/http";
 using TypeSpec.Http;
 @service
+@useAuth(BearerAuth)
 namespace DemoService {
+
+  @error
+  model CustomError {
+    @statusCode _: 400;
+    code: int32;
+    message: string;
+  }
+
   @route("/people")
   namespace People {
     model Person<T> {
-      @path id: int32;
-      @header firstName: string;
+      id: int32;
+      firstName: string;
+      lastName: string;
       special: T;
-      @header lastName: string;
       pets: Pets.Pet[];
     }
 
-    @get op listPeople(@body sortBy?: string): Person<string>[];
-
-    @put op replacePerson(@bodyRoot person: Person<int32>): Person<int32>;
+    @get op getPerson(@path id: int32): {
+      @body body: Person<string>;
+      @header testHeader: string;
+    } | NotFoundResponse | CustomError;
+    @get op listPeople(): Person<string>[] | CustomError;
+    @post op createPerson(@body person: Person<string>): CreatedResponse | CustomError;
   }
 
-  // This will generate a RestController for the /pets endpoint
   @route("/pets")
   namespace Pets {
-    // Just defined inside package
     model Pet {
       name: string | int32;
       owner?: People.Person<int32>;
     }
 
-    // This is default get, will generate a RouteHandler for '/'
-    op listPets(): Pet[];
+    op listPets(): {
+     @body body: Pet[];
+     @header x: string;
+    } | CustomError;
+    @put op listPets2(): {
+      @header noBodyHeader: string;
+    };
   }
 }

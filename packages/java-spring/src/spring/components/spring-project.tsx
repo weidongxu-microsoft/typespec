@@ -22,4 +22,9 @@ function SpringDependencies() {
     artifactId: "spring-boot-starter-web",
     version: "3.3.3",
   });
+  project.scope.addDependency({
+    groupId: "org.springframework.boot",
+    artifactId: "spring-boot-starter-oauth2-resource-server",
+    version: "3.3.3",
+  });
 }

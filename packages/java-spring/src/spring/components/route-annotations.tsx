@@ -3,17 +3,19 @@ import * as jv from "@alloy-js/java";
 import { springFramework } from "../libraries/index.js";
 
 export interface AnnotationsProps {
-  annotationKind: string;
-  annotationParameters?: string;
+  kind: string;
+  parameters?: Record<string, Child>;
 }
 
-export function SpringRouteAnnotation({ annotationKind, annotationParameters }: AnnotationsProps) {
-  const kind = springAnnotations.get(annotationKind);
-  if (annotationParameters) {
-    const valueRecord: Record<string, Child> = { "": annotationParameters };
-    return <jv.Annotation type={kind} value={valueRecord} />;
-  }
-  return <jv.Annotation type={kind} />;
+/**
+ * Annotation wrapper for specifying http route annotations, such as @GetMapping, @PostMapping, @RequestParam, etc.
+ *
+ * @param kind The kind of annotation, see {@link springAnnotations}
+ * @param parameters Parameters to be passed to the annotation, such as if the value is required
+ */
+export function SpringRouteAnnotation({ kind, parameters }: AnnotationsProps) {
+  const httpVerbRef = springAnnotations.get(kind);
+  return <jv.Annotation type={httpVerbRef} value={parameters} />;
 }
 
 export const springAnnotations = new Map<string, Refkey>([

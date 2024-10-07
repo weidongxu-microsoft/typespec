@@ -4,10 +4,10 @@ import * as ts from "@alloy-js/typescript";
 import { Model, Operation } from "@typespec/compiler";
 import { BasicTestRunner } from "@typespec/compiler/testing";
 import { assert, beforeEach, describe, expect, it } from "vitest";
-import { createHttpClientJavascriptEmitterTestRunner } from "../../test-host.js";
 import { HttpRequestOptions } from "../../../src/components/http-request-options.jsx";
 import { ModelsFile } from "../../../src/components/models-file.jsx";
 import { ModelSerializers } from "../../../src/components/serializers.jsx";
+import { createHttpClientJavascriptEmitterTestRunner } from "../../test-host.js";
 
 const namePolicy = ts.createTSNamePolicy();
 let runner: BasicTestRunner;
@@ -38,7 +38,7 @@ describe("HttpRequestHeaders", () => {
         <ts.SourceFile path="test.ts">
           <HttpRequestOptions.Headers operation={read} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
@@ -75,7 +75,7 @@ describe("HttpRequestHeaders", () => {
         <ts.SourceFile path="test.ts">
           <HttpRequestOptions.Headers operation={read} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
@@ -116,7 +116,7 @@ headers: {
         <ts.SourceFile path="test.ts">
           <HttpRequestOptions.Headers operation={read} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
@@ -159,7 +159,7 @@ headers: {
         <ts.SourceFile path="test.ts">
           <HttpRequestOptions.Headers operation={read} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
@@ -169,8 +169,8 @@ headers: {
       headers: {
         "Content-Type": "application/json",
         "required": required,
-        "optional": options.optional,
-        "automatic-casing": automaticCasing
+        "automatic-casing": automaticCasing,
+        "optional": options?.optional
       },
     `;
     expect(actualContent).toEqual(expectedContent);
@@ -199,7 +199,7 @@ describe("HttpRequestBody", () => {
         <ts.SourceFile path="test.ts">
           <HttpRequestOptions.Body operation={read} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
@@ -229,7 +229,7 @@ describe("HttpRequestBody", () => {
         <ts.SourceFile path="test.ts">
           <HttpRequestOptions.Body operation={read} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
@@ -258,7 +258,7 @@ describe("HttpRequestBody", () => {
     }
     `;
 
-    const { read, Widget } = (await runner.compile(spec)) as { read: Operation, Widget: Model };
+    const { read, Widget } = (await runner.compile(spec)) as { read: Operation; Widget: Model };
 
     const res = render(
       <Output namePolicy={namePolicy}>
@@ -270,17 +270,17 @@ describe("HttpRequestBody", () => {
           `}
           <HttpRequestOptions.Body operation={read} itemName="widget" />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
     assert(testFile, "test.ts file not rendered");
     const actualContent = testFile.contents;
     const expectedContent = d`
-    import { widgetToTransport } from "./serializers.js";
-    
     const widget = {};
-    body: JSON.stringify(widgetToTransport(widget)),
+    body: JSON.stringify({
+      "name": name
+    }),
     `;
     expect(actualContent).toEqual(expectedContent);
   });
@@ -303,7 +303,7 @@ describe("HttpRequestBody", () => {
     }
     `;
 
-    const { read, Widget } = (await runner.compile(spec)) as { read: Operation, Widget: Model };
+    const { read, Widget } = (await runner.compile(spec)) as { read: Operation; Widget: Model };
 
     const res = render(
       <Output namePolicy={namePolicy}>
@@ -312,7 +312,7 @@ describe("HttpRequestBody", () => {
         <ts.SourceFile path="test.ts">
           <HttpRequestOptions.Body operation={read} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");

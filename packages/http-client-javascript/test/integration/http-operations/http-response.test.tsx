@@ -4,11 +4,11 @@ import * as ts from "@alloy-js/typescript";
 import { Model, Operation } from "@typespec/compiler";
 import { BasicTestRunner } from "@typespec/compiler/testing";
 import { assert, beforeEach, describe, expect, it } from "vitest";
-import { createHttpClientJavascriptEmitterTestRunner } from "../../test-host.js";
 import { uriTemplateLib } from "../../../src/components/external-packages/uri-template.js";
 import { HttpResponse } from "../../../src/components/http-response.jsx";
 import { ModelsFile } from "../../../src/components/models-file.jsx";
 import { ModelSerializers } from "../../../src/components/serializers.jsx";
+import { createHttpClientJavascriptEmitterTestRunner } from "../../test-host.js";
 
 const namePolicy = ts.createTSNamePolicy();
 let runner: BasicTestRunner;
@@ -16,7 +16,6 @@ let runner: BasicTestRunner;
 beforeEach(async () => {
   runner = await createHttpClientJavascriptEmitterTestRunner();
 });
-
 
 describe("HttpResponse", () => {
   it("should handle a basic response", async () => {
@@ -40,13 +39,13 @@ describe("HttpResponse", () => {
         <ts.SourceFile path="test.ts">
           <HttpResponse operation={read} responseRefkey={refkey()} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
     assert(testFile, "test.ts file not rendered");
     const actualContent = testFile.contents;
-    const expectedContent =d `
+    const expectedContent = d`
     if (response.status === 204 && !response.body) {
       return;
     }
@@ -75,7 +74,7 @@ describe("HttpResponse", () => {
     }
     `;
 
-    const { read, Widget } = (await runner.compile(spec)) as { read: Operation, Widget: Model };
+    const { read, Widget } = (await runner.compile(spec)) as { read: Operation; Widget: Model };
 
     const res = render(
       <Output namePolicy={namePolicy} externals={[uriTemplateLib]}>
@@ -84,17 +83,18 @@ describe("HttpResponse", () => {
         <ts.SourceFile path="test.ts">
           <HttpResponse operation={read} responseRefkey={refkey()} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
     assert(testFile, "test.ts file not rendered");
     const actualContent = testFile.contents;
-    const expectedContent =d `
+    const expectedContent = d`
     import { widgetToApplication } from "./serializers.js";
 
-    if (response.status === 200 && response.headers.get("content-type") === "application/json") {
-      return widgetToApplication(response.body);
+    if (response.status === 200) {
+      const bodyJson = await response.json();
+      return widgetToApplication(bodyJson);
     }
     
     throw new Error("Unhandled response");
@@ -121,7 +121,7 @@ describe("HttpResponse", () => {
     }
     `;
 
-    const { read, Widget } = (await runner.compile(spec)) as { read: Operation, Widget: Model };
+    const { read, Widget } = (await runner.compile(spec)) as { read: Operation; Widget: Model };
 
     const res = render(
       <Output namePolicy={namePolicy} externals={[uriTemplateLib]}>
@@ -130,17 +130,18 @@ describe("HttpResponse", () => {
         <ts.SourceFile path="test.ts">
           <HttpResponse operation={read} responseRefkey={refkey()} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
     assert(testFile, "test.ts file not rendered");
     const actualContent = testFile.contents;
-    const expectedContent =d `
+    const expectedContent = d`
     import { widgetToApplication } from "./serializers.js";
     
-    if (response.status === 200 && response.headers.get("content-type") === "application/json") {
-      return widgetToApplication(response.body);
+    if (response.status === 200) {
+      const bodyJson = await response.json();
+      return widgetToApplication(bodyJson);
     }
 
     if (response.status === 204 && !response.body) {
@@ -171,7 +172,7 @@ describe("HttpResponse", () => {
     }
     `;
 
-    const { read, Widget } = (await runner.compile(spec)) as { read: Operation, Widget: Model };
+    const { read, Widget } = (await runner.compile(spec)) as { read: Operation; Widget: Model };
 
     const res = render(
       <Output namePolicy={namePolicy} externals={[uriTemplateLib]}>
@@ -180,24 +181,26 @@ describe("HttpResponse", () => {
         <ts.SourceFile path="test.ts">
           <HttpResponse operation={read} responseRefkey={refkey()} />
         </ts.SourceFile>
-      </Output>
+      </Output>,
     );
 
     const testFile = res.contents.find((file) => file.path === "test.ts");
     assert(testFile, "test.ts file not rendered");
     const actualContent = testFile.contents;
-    const expectedContent =d `
+    const expectedContent = d`
     import { widgetToApplication } from "./serializers.js";
     
     if (response.status === 200 && response.headers.get("content-type") === "application/json+something") {
+      const bodyJson = await response.json();
       return {
-        "name": response.body.name,
-        "age": response.body.age
+        "name": bodyJson.name,
+        "age": bodyJson.age
       };
     }
 
-    if (response.status === 200 && response.headers.get("content-type") === "application/json") {
-      return widgetToApplication(response.body);
+    if (response.status === 200) {
+      const bodyJson = await response.json();
+      return widgetToApplication(bodyJson);
     }
 
     if (response.status === 204 && !response.body) {
@@ -208,4 +211,4 @@ describe("HttpResponse", () => {
     `;
     expect(actualContent).toEqual(expectedContent);
   });
-})
+});

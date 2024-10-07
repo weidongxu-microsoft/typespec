@@ -21,10 +21,8 @@ it("Creates RestController", async () => {
       package me.test.code;
       
       import org.springframework.web.bind.annotation.RestController;
-      import org.springframework.web.bind.annotation.RequestMapping;
       
       @RestController
-      @RequestMapping("/widgets")
       public class WidgetsController {
         ${""}
       }

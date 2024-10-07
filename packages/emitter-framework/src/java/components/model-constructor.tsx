@@ -13,7 +13,9 @@ export interface ModelConstructorProps extends ConstructorProps {
  * TODO: Handle super constructor
  */
 export function ModelConstructor(props: ModelConstructorProps) {
-  const properties = Array.from(props.type.properties.values());
+  const properties = Array.from(props.type.properties.values()).filter((p) => {
+    return !p.decorators?.some((d) => d.definition?.name === "@statusCode");
+  });
 
   const parameters: Record<string, Children> = {};
   properties.forEach((property) => {
@@ -27,7 +29,7 @@ export function ModelConstructor(props: ModelConstructorProps) {
         (property) => (
           <ConstructorMember type={property} />
         ),
-        { joiner: "\n" }
+        { joiner: "\n" },
       )}
     </Constructor>
   );
