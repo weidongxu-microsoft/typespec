@@ -1,38 +1,26 @@
 namespace People {
-  model Person<T> {
+  model Person <T>{
     firstName: string;
     lastName: string;
-    special: T;
     pets: Pets.Pet[];
+    special: T;
   }
 
-enum Direction {
-  North,
-  East: "east",
-  South: "south",
-  West: "west",
-}
-enum Foo {
-  One: 1,
-  Ten: 10,
-  Hundred: 100,
-  Thousand: 1000,
-}
-enum DirectionExt {
-  ...Direction,
-  `North East`,
-  `North West`,
-  `South East`,
-  `South West`,
-}
+  model Adult<T> extends Person<T> {
+    age: int32;
+  }
 
-  op listPeople(sortBy?: string): Person<string>[];
+  model Adult2<T> extends Person<int32> {
+    age: T;
+  }
+
+  op listPeople(sortBy?: string): Person<string>;
 }
 
 namespace Pets {
   model Pet {
     name: string;
-    owner?: People.Person<int32>;
+    owner?: People.Person<string>;
   }
   op listPets(): Pet[];
 }

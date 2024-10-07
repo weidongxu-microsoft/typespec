@@ -1,11 +1,12 @@
 import { Children, refkey as getRefkey, mapJoin } from "@alloy-js/core";
-import { Class, Constructor, useJavaNamePolicy } from "@alloy-js/java";
-import { $, Model, ModelProperty } from "@typespec/compiler";
+import { Class, Constructor, Generics, useJavaNamePolicy } from "@alloy-js/java";
+import { $, Model, ModelProperty, Type } from "@typespec/compiler";
 import { getTemplateParams } from "../utils.js";
 import { Getter } from "./getter.js";
 import { ModelConstructor } from "./model-constructor.js";
 import { ModelMember } from "./model-member.js";
 import { Setter } from "./setter.js";
+import { TypeExpression } from "./type-expression.js";
 
 export interface ModelDeclarationProps {
   type: Model;
@@ -14,7 +15,6 @@ export interface ModelDeclarationProps {
 
 /**
  * Generate basic java class for a model
- * TODO: Handle extending other models
  */
 export function ModelDeclaration({
   type,
@@ -32,6 +32,24 @@ export function ModelDeclaration({
   generics?.forEach((generic) => (genericObject[generic] = ""));
   const refkey = getRefkey(type);
 
+  // Collect base model that this model extends from. Also collect generic arguments if any
+  const baseModel = type.baseModel;
+  const genericArgs = baseModel ? baseModel.templateMapper?.args : [];
+  // Build generic string
+  const baseModelGenericsString =
+    (genericArgs?.length ?? 0) > 0 ? (
+      <Generics types={genericArgs?.map((gen) => <TypeExpression type={gen as Type} />)} />
+    ) : (
+      ""
+    );
+  const baseModelExpression = baseModel ? getRefkey(baseModel) : "";
+  // prettier-ignore
+  const extendsExpression = (
+    <>
+      {baseModelExpression}{baseModelGenericsString}
+    </>
+  );
+
   const isErrorModel = $.model.isErrorModel(type);
 
   return (
@@ -40,7 +58,7 @@ export function ModelDeclaration({
       name={name}
       refkey={refkey}
       generics={generics?.length !== 0 ? genericObject : undefined}
-      extends={isErrorModel ? "Exception" : undefined}
+      extends={isErrorModel ? "Exception" : baseModel ? extendsExpression : undefined}
     >
       {""}
       {mapJoin(
