@@ -45,11 +45,11 @@ export function ModelDeclaration({
 
   const genericsString = generics ? `<${generics.join(", ")}> ` : "";
 
-  const baseModelExpression = baseModel ? baseModel.name : "";
+  const baseModelExpression = baseModel ? getRefkey(baseModel) : "";
+  // prettier-ignore
   const extendsExpression = (
     <>
-      {baseModelExpression}
-      {generics?.length ? genericsString : baseModelGenericsString}
+      {baseModelExpression}{generics?.length ? genericsString : baseModelGenericsString}
     </>
   );
 

@@ -10,6 +10,10 @@ namespace People {
     age: int32;
   }
 
+  model Adult2<T> extends Person<string> {
+    age: T;
+  }
+
   op listPeople(sortBy?: string): Person<string>;
 }
 
