@@ -11,8 +11,13 @@ import {
   HttpService,
   resolveAuthentication,
 } from "@typespec/http";
-import { emitAuth, emitOperations, emitServices, OperationsGroup } from "./common/index.js";
-import { emitResponseModels } from "./common/responses.js";
+import {
+  emitAuth,
+  emitOperations,
+  emitResponseModels,
+  emitServices,
+  OperationsGroup,
+} from "./common/index.js";
 import { NoBody, ResponseWithHeaders } from "./components/index.js";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";

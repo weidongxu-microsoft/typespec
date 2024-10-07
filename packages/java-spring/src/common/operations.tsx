@@ -323,7 +323,7 @@ export function emitServices(ops: Record<string, OperationsGroup>) {
                       <TypeExpression type={responseBodyType} />
                     ) : undefined;
 
-                    // Only use reponse with headers wrappes if doesn't require custom reponse model
+                    // Only use ResponseWithHeaders wrapper if doesn't require custom response model
                     // prettier-ignore
                     const finalResponseModel = responseContainsHeaders && !requiresCustomModel ? (
                       <>

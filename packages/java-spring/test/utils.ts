@@ -25,6 +25,25 @@ export async function getEmitOutput(tspCode: string, cb: (program: Program) => C
 }
 
 /**
+ * Children will be passed to the package directory, have to declare source file yourself.
+ * Useful util if needing to emit multiple files for a unit test
+ */
+export async function getMultiEmitOutput(
+  tspCode: string,
+  cb: (program: Program) => Children,
+  testFileName: string = "Test.java",
+) {
+  const program = await getProgram(tspCode);
+
+  const res = render(
+    Output().children(PackageDirectory({ package: "me.test.code" }).children(cb(program))),
+  );
+  const testFile = findFile(res, testFileName);
+
+  return testFile.contents;
+}
+
+/**
  * When running full emitter test, lookup file by package and name
  */
 export function findEmittedFile(res: Record<string, string>, path: string): string {
