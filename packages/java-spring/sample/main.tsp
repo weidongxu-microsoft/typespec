@@ -10,7 +10,7 @@ namespace People {
     age: int32;
   }
 
-  model Adult2<T> extends Person<string> {
+  model Adult2<T> extends Person<int32> {
     age: T;
   }
 

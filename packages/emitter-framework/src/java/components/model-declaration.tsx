@@ -32,24 +32,21 @@ export function ModelDeclaration({
   generics?.forEach((generic) => (genericObject[generic] = ""));
   const refkey = getRefkey(type);
 
+  // Collect base model that this model extends from. Also collect generic arguments if any
   const baseModel = type.baseModel;
-
   const genericArgs = baseModel ? baseModel.templateMapper?.args : [];
-
+  // Build generic string
   const baseModelGenericsString =
     (genericArgs?.length ?? 0) > 0 ? (
       <Generics types={genericArgs?.map((gen) => <TypeExpression type={gen as Type} />)} />
     ) : (
       ""
     );
-
-  const genericsString = generics ? `<${generics.join(", ")}> ` : "";
-
   const baseModelExpression = baseModel ? getRefkey(baseModel) : "";
   // prettier-ignore
   const extendsExpression = (
     <>
-      {baseModelExpression}{generics?.length ? genericsString : baseModelGenericsString}
+      {baseModelExpression}{baseModelGenericsString}
     </>
   );
 
