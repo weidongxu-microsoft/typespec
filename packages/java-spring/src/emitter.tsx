@@ -23,6 +23,7 @@ import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
 
 const RestNamespace = "TypeSpec.Rest";
+const ResourceNamespace = "Resource";
 
 const projectConfig: MavenProjectConfig = {
   groupId: "io.typespec",
@@ -181,6 +182,9 @@ export function isNoEmit(type: Type): boolean {
       return true;
     }
     if ([RestNamespace].includes(fullNamespaceName)) {
+      return true;
+    }
+    if ([ResourceNamespace].includes(fullNamespaceName)) {
       return true;
     }
   }
