@@ -71,6 +71,18 @@ export async function $onEmit(context: EmitContext) {
     {} as Record<string, OperationsGroup>,
   );
 
+  // Query TypeSpec types that may need to be emitted based on responses from http operations
+  serviceOperations.forEach((op) => {
+    const responseModels = op.responses.map((res) => res.type);
+    responseModels.forEach((model) => {
+      if (isNoEmit(model)) {
+        return;
+      }
+
+      types.dataTypes.push(model);
+    });
+  });
+
   // Obtain auth scheme
   // For now we are only obtaining auth on the first service, and are taking the first auth scheme.
   // Currently not supporting multiple auth schemes or per operation overrides.
