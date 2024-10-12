@@ -30,6 +30,19 @@ export function TypeExpression({ type }: TypeExpressionProps) {
     case "ModelProperty":
       return <TypeExpression type={type.type} />;
     case "Model":
+      // Special case: If has template arguments, indexer will be null so we need to use
+      // the templateMapper to determine the Array type
+      if (type.name === "Array" && (type?.templateMapper?.args?.length ?? 0) >= 1) {
+        const genericArgs = type.templateMapper?.args;
+        const genericsString =
+          (genericArgs?.length ?? 0) > 0 ? (
+            <Generics types={genericArgs?.map((gen) => <TypeExpression type={gen as Type} />)} />
+          ) : (
+            ""
+          );
+        return code`${javaUtil.List}${genericsString}`;
+      }
+
       if (isArray(type)) {
         return code`${javaUtil.List}${(<Generics types={[<TypeExpression type={type.indexer.value} />]} />)}`;
       }

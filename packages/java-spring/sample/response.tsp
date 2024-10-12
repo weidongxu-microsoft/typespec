@@ -18,6 +18,13 @@ model Pet {
   age: int32;
 }
 
+model Person<T> {
+  id: int32;
+  name: string;
+  age: T[];
+  items: string[];
+}
+
 model Toy {
   id: int64;
   petId: int64;
