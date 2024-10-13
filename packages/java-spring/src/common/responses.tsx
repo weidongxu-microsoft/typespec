@@ -37,7 +37,7 @@ export function emitResponseModels(ops: HttpOperation[]) {
               // prettier-ignore
               const finalReturnType = requiresHeaders ? (
                 <>
-                    {refkey("ResponseWithHeaders")}<jv.Generics types={[returnType]} />
+                    {refkey("Response")}<jv.Generics types={[returnType]} />
                 </>
               ) : returnType;
 
@@ -66,7 +66,7 @@ export function emitResponseModels(ops: HttpOperation[]) {
               // prettier-ignore
               const finalReturnType = requiresHeaders ? (
                 <>
-                  {refkey("ResponseWithHeaders")}<jv.Generics types={[returnType]} />
+                  {refkey("Response")}<jv.Generics types={[returnType]} />
                 </>
               ) : (
                 returnType

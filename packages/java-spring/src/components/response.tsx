@@ -6,7 +6,7 @@ import { springFramework } from "../spring/libraries/index.js";
  * Used to represent a response that contains headers. Wraps the actual
  * response object.
  */
-export function ResponseWithHeaders() {
+export function Response() {
   // prettier-ignore
   const multiValueMap = (
     <>
@@ -15,10 +15,10 @@ export function ResponseWithHeaders() {
   );
 
   return (
-    <jv.SourceFile path="ResponseWithHeaders.java">
+    <jv.SourceFile path="Response.java">
       <jv.Class
         public
-        name="ResponseWithHeaders"
+        name="Response"
         generics={{
           T: null,
         }}

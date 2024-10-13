@@ -133,7 +133,7 @@ export function emitOperations(ops: Record<string, OperationsGroup>) {
                   // prettier-ignore
                   const finalReturnType = responseContainsHeaders ? (
                     <>
-                      {refkey("ResponseWithHeaders")}<jv.Generics types={[returnType]} />
+                      {refkey("Response")}<jv.Generics types={[returnType]} />
                     </>
                   ) : returnType;
 
@@ -327,7 +327,7 @@ export function emitServices(ops: Record<string, OperationsGroup>) {
                     // prettier-ignore
                     const finalResponseModel = responseContainsHeaders && !requiresCustomModel ? (
                       <>
-                        {refkey("ResponseWithHeaders")}<jv.Generics types={[responseModel ? responseModel : refkey('NoBody')]} />
+                        {refkey("Response")}<jv.Generics types={[responseModel ? responseModel : refkey('NoBody')]} />
                       </>
                     ) : responseModel;
 

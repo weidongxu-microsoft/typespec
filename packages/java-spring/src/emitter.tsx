@@ -18,7 +18,7 @@ import {
   emitServices,
   OperationsGroup,
 } from "./common/index.js";
-import { NoBody, ResponseWithHeaders } from "./components/index.js";
+import { NoBody, Response } from "./components/index.js";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
 
@@ -168,7 +168,7 @@ export async function $onEmit(context: EmitContext) {
                 );
               })}
             <NoBody />
-            <ResponseWithHeaders />
+            <Response />
           </jv.PackageDirectory>
           <jv.PackageDirectory package="controllers">
             {emitOperations(httpOperations)}
