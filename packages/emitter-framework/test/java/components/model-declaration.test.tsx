@@ -45,24 +45,27 @@ describe("TypeSpec Model Declaration", () => {
           return this.id;
         }
         
-        public void setId(String id) {
+        public Widget setId(String id) {
           this.id = id;
+          return this;
         }
         
         public Integer getWeight() {
           return this.weight;
         }
         
-        public void setWeight(Integer weight) {
+        public Widget setWeight(Integer weight) {
           this.weight = weight;
+          return this;
         }
         
         public String getColor() {
           return this.color;
         }
         
-        public void setColor(String color) {
+        public Widget setColor(String color) {
           this.color = color;
+          return this;
         }
         
       }
@@ -107,16 +110,18 @@ describe("TypeSpec Model Declaration", () => {
           return this.id;
         }
         
-        public void setId(String id) {
+        public Widget<T> setId(String id) {
           this.id = id;
+          return this;
         }
         
         public T getItem() {
           return this.item;
         }
         
-        public void setItem(T item) {
+        public Widget<T> setItem(T item) {
           this.item = item;
+          return this;
         }
         
       }
@@ -172,8 +177,9 @@ describe("TypeSpec Model Declaration", () => {
           return this.id;
         }
         
-        public void setId(String id) {
+        public Widget setId(String id) {
           this.id = id;
+          return this;
         }
         
       }
@@ -229,8 +235,9 @@ describe("TypeSpec Model Declaration", () => {
           return this.id;
         }
         
-        public void setId(String id) {
+        public Widget setId(String id) {
           this.id = id;
+          return this;
         }
         
       }
@@ -286,8 +293,9 @@ describe("TypeSpec Model Declaration", () => {
           return this.id;
         }
         
-        public void setId(T id) {
+        public Widget<T> setId(T id) {
           this.id = id;
+          return this;
         }
         
       }
