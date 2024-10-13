@@ -88,6 +88,38 @@ export async function $onEmit(context: EmitContext) {
   // Currently not supporting multiple auth schemes or per operation overrides.
   const auth = resolveAuthentication(services[0][0] as HttpService);
 
+  // The following is a bit hacky but is required until a better solution is found.
+  // Currently if you declare a generic model and use the template type as the type of
+  // a property, like the following
+  /// model Person<T> {
+  //  name: T;
+  // }
+  // When using the model like Person<string>, when the model is emitted
+  // it uses "String" instead of "T". This happens because a different model object is passed
+  // to the emitter for each instance, only the instance with the actual declaration will
+  // emit correctly, all the other ones always replace the model property type with the passed type (in this case String).
+  //
+  // What this fix is doing is finding the declaration model instance in the array (which is the first), and moving it to
+  // the back of the array to ensure it is the actual one emitted.
+  //
+  // Can't just emit a model with a name once since currently refkeys depend on the Model instance and not the name. So maybe
+  // a solution is to change model refkeys to use the name instead of the model type. Refkeys aren't name based as I
+  // believe it could lead to some referential conflicts. For now this hacky fix
+  // works but probably needs to be changed
+  const modelNameSet = new Set<string>();
+  types.dataTypes
+    .filter((type) => type.kind === "Model")
+    .forEach((type) => {
+      modelNameSet.add(type.name);
+    });
+  modelNameSet.forEach((modelName) => {
+    // Get first entry and move to back
+    const modelIndex = types.dataTypes.findIndex((type) => type?.name === modelName);
+    const removedModel = types.dataTypes[modelIndex];
+    types.dataTypes.splice(modelIndex, 1);
+    types.dataTypes.push(removedModel);
+  });
+
   const outputDir = context.emitterOutputDir;
   return (
     <ay.Output

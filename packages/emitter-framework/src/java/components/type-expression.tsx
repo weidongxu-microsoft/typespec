@@ -92,15 +92,15 @@ function getScalarIntrinsicExpression(type: Scalar | IntrinsicType): string {
   if ($.scalar.is(type)) {
     if ($.scalar.isUtcDateTime(type) || $.scalar.extendsUtcDateTime(type)) {
       const encoding = $.scalar.getEncoding(type);
-      let emittedType = "Date";
+      let emittedType = "java.util.Date";
       switch (encoding?.encoding) {
         case "unixTimestamp":
-          emittedType = "number";
+          emittedType = "Long";
           break;
         case "rfc7231":
         case "rfc3339":
         default:
-          emittedType = `Date`;
+          emittedType = "java.util.Date";
           break;
       }
 
