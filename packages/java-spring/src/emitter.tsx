@@ -114,6 +114,7 @@ export async function $onEmit(context: EmitContext) {
     });
   modelNameSet.forEach((modelName) => {
     // Get first entry and move to back
+    // @ts-expect-error Name might not exist
     const modelIndex = types.dataTypes.findIndex((type) => type?.name === modelName);
     const removedModel = types.dataTypes[modelIndex];
     types.dataTypes.splice(modelIndex, 1);

@@ -54,6 +54,7 @@ export function ModelDeclaration({
 
   return (
     <Class
+      final={type.derivedModels.length === 0}
       public
       name={name}
       refkey={refkey}
