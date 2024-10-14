@@ -241,7 +241,7 @@ export function isNoEmit(type: Type): boolean {
     if ([HttpNamespace].includes(fullNamespaceName)) {
       return true;
     }
-    if ([RestNamespace].includes(fullNamespaceName)) {
+    if (fullNamespaceName.startsWith(RestNamespace)) {
       return true;
     }
   }
