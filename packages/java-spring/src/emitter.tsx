@@ -24,21 +24,6 @@ import { springFramework } from "./spring/libraries/index.js";
 
 const RestNamespace = "TypeSpec.Rest";
 
-const projectConfig: MavenProjectConfig = {
-  groupId: "io.typespec",
-  artifactId: "generated",
-  version: "1.0.0",
-  javaVersion: 8,
-  build: {
-    plugins: [
-      {
-        groupId: "org.springframework.boot",
-        artifactId: "spring-boot-maven-plugin",
-      },
-    ],
-  },
-};
-
 /**
  * This emitter takes a few custom options:
  * - springVersion: The version of spring boot used in the generated code

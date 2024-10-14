@@ -3,7 +3,7 @@ import * as jv from "@alloy-js/java";
 import { springFramework } from "../spring/libraries/index.js";
 
 /**
- * Used to represent a response that contains headers. Wraps the actual
+ * Used to represent a response that might contain headers. Wraps the actual
  * response object.
  */
 export function Response() {
@@ -14,6 +14,7 @@ export function Response() {
     </>
   );
 
+  // prettier-ignore
   return (
     <jv.SourceFile path="Response.java">
       <jv.Class
@@ -25,6 +26,7 @@ export function Response() {
       >
         <jv.Variable private type="T" name="response" />
         <jv.Variable private type={multiValueMap} name="headers" />
+
         <jv.Constructor
           public
           parameters={{
@@ -37,6 +39,19 @@ export function Response() {
             this.headers = headers;
           `}
         </jv.Constructor>
+
+        <jv.Constructor
+          public
+          parameters={{
+            response: "T",
+          }}
+        >
+          {code`
+            this.response = response;
+            this.headers = null;
+          `}
+        </jv.Constructor>
+
         <jv.Constructor
           public
           parameters={{

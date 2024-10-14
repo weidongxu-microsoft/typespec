@@ -12,6 +12,9 @@ export interface SpringProjectProps extends ProjectDirectoryProps {
   springVersion?: string;
 }
 
+/**
+ * Sets up the project directory and dependencies needed for spring
+ */
 export function SpringProject(props: SpringProjectProps) {
   return (
     <ProjectDirectory {...props}>

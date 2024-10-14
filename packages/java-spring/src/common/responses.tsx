@@ -6,7 +6,7 @@ import { TypeExpression } from "@typespec/emitter-framework/java";
 import { HttpOperation } from "@typespec/http";
 
 /**
- * Emit models used for custom response types
+ * Emit models used for custom response types. Emits class with name `${operationName}Response`
  *
  * @param ops Operations in the program
  */
