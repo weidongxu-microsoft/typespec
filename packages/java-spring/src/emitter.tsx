@@ -39,7 +39,33 @@ const projectConfig: MavenProjectConfig = {
   },
 };
 
+/**
+ * This emitter takes a few custom options:
+ * - springVersion: The version of spring boot used in the generated code
+ * - javaVersion: Version of java maven will compile with, by default it is 8
+ * - package: Package that all the java code is outputted to, by default it is 'io.typespec.generated'
+ * - groupId: Maven groupId for the project, by default it is 'io.typespec'
+ * - artifactId: Maven artifactId for the project, by default it is 'generated'
+ * - version: Maven version for the project, by default it is '1.0.0'
+ */
 export async function $onEmit(context: EmitContext) {
+  const options = context.options;
+  // Maven config, takes options into emitter
+  const projectConfig: MavenProjectConfig = {
+    groupId: options?.groupId ?? "io.typespec",
+    artifactId: options?.artifactId ?? "generated",
+    version: options?.version ?? "1.0.0",
+    javaVersion: options?.javaVersion ?? 8,
+    build: {
+      plugins: [
+        {
+          groupId: "org.springframework.boot",
+          artifactId: "spring-boot-maven-plugin",
+        },
+      ],
+    },
+  };
+
   // Query types needed in program, models, interfaces etc
   const types = queryTypes(context);
 
@@ -128,7 +154,12 @@ export async function $onEmit(context: EmitContext) {
       basePath={outputDir}
       namePolicy={createJavaNamePolicy()}
     >
-      <SpringProject name="TestProject" mavenProjectConfig={projectConfig}>
+      <SpringProject
+        name="TestProject"
+        mavenProjectConfig={projectConfig}
+        useAuth={(auth?.schemes?.length ?? 0) > 0}
+        springVersion={options?.springVersion}
+      >
         <jv.PackageDirectory package="io.typespec.generated">
           <jv.SourceFile path="MainApplication.java">
             <jv.Annotation type={springFramework.SpringBootApplication} />

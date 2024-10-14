@@ -1,11 +1,21 @@
 import { ProjectDirectory, ProjectDirectoryProps, useProject } from "@alloy-js/java";
 
-export interface SpringProjectProps extends ProjectDirectoryProps {}
+export interface SpringProjectProps extends ProjectDirectoryProps {
+  /**
+   * If this project has auth configured, should include authentication library
+   */
+  useAuth?: boolean;
+
+  /**
+   * Spring version to use for project
+   */
+  springVersion?: string;
+}
 
 export function SpringProject(props: SpringProjectProps) {
   return (
     <ProjectDirectory {...props}>
-      <SpringDependencies />
+      <SpringDependencies {...props} />
       {props.children}
     </ProjectDirectory>
   );
@@ -14,17 +24,20 @@ export function SpringProject(props: SpringProjectProps) {
 /**
  * Setup spring dependencies
  */
-function SpringDependencies() {
+function SpringDependencies(props: SpringProjectProps) {
   const project = useProject();
+  const springVersion = props.springVersion ?? "3.3.3";
 
   project.scope.addDependency({
     groupId: "org.springframework.boot",
     artifactId: "spring-boot-starter-web",
-    version: "3.3.3",
+    version: springVersion,
   });
-  project.scope.addDependency({
-    groupId: "org.springframework.boot",
-    artifactId: "spring-boot-starter-oauth2-resource-server",
-    version: "3.3.3",
-  });
+  if (props.useAuth) {
+    project.scope.addDependency({
+      groupId: "org.springframework.boot",
+      artifactId: "spring-boot-starter-oauth2-resource-server",
+      version: springVersion,
+    });
+  }
 }
