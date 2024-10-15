@@ -54,45 +54,50 @@ describe("Service with all http decorators", async () => {
     expect(file).toBe(d`
       package io.typespec.generated.models;
       
+      import java.util.Objects;
       
-      public class Person {
+      
+      public final class Person {
         
         private Integer id;
         private String name;
         private Integer age;
         
         public Person() {
-    
+          
         }
         
         public Person(Integer id, String name, Integer age) {
-          this.id = id;
-          this.name = name;
-          this.age = age;
+          this.id = Objects.requireNonNull(id, "id cannot be null");
+          this.name = Objects.requireNonNull(name, "name cannot be null");
+          this.age = Objects.requireNonNull(age, "age cannot be null");
         }
         
         public Integer getId() {
           return this.id;
         }
         
-        public void setId(Integer id) {
+        public Person setId(Integer id) {
           this.id = id;
+          return this;
         }
         
         public String getName() {
           return this.name;
         }
         
-        public void setName(String name) {
+        public Person setName(String name) {
           this.name = name;
+          return this;
         }
         
         public Integer getAge() {
           return this.age;
         }
         
-        public void setAge(Integer age) {
+        public Person setAge(Integer age) {
           this.age = age;
+          return this;
         }
         
       }
@@ -155,5 +160,28 @@ describe("Service with all http decorators", async () => {
         }
       }
     `);
+  });
+
+  it("Emits PeopleService", () => {
+    const file = findEmittedFile(result, "io.typespec.generated.services.PeopleService.java");
+
+    expect(file).toBe(d`
+      package io.typespec.generated.services;
+  
+      import java.util.List;
+      import io.typespec.generated.models.Person;
+      
+      public interface PeopleService {
+        List<Person> listPeople(String authorization, String name);
+        Person createPerson(Person newPerson);
+        Person updatePerson(Person updatedPerson, Integer id);
+        void deletePerson(Integer id);
+      }
+    `);
+  });
+
+  it("Emits Project Configuration Files", () => {
+    // Simply call findEmittedFile to check files were emitted
+    findEmittedFile(result, "pom.xml");
   });
 })

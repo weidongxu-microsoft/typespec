@@ -77,66 +77,72 @@ describe("Service with responses", async () => {
       package io.typespec.generated.models;
       
       import java.util.List;
+      import java.util.Objects;
       
       
-      public class Person<T> {
+      public final class Person<T> {
         
         private Integer id;
         private String firstName;
         private String lastName;
-        private String special;
+        private T special;
         private List<Pet> pets;
         
         public Person() {
           
         }
         
-        public Person(Integer id, String firstName, String lastName, String special, List<Pet> pets) {
-          this.id = id;
-          this.firstName = firstName;
-          this.lastName = lastName;
-          this.special = special;
-          this.pets = pets;
+        public Person(Integer id, String firstName, String lastName, T special, List<Pet> pets) {
+          this.id = Objects.requireNonNull(id, "id cannot be null");
+          this.firstName = Objects.requireNonNull(firstName, "firstName cannot be null");
+          this.lastName = Objects.requireNonNull(lastName, "lastName cannot be null");
+          this.special = Objects.requireNonNull(special, "special cannot be null");
+          this.pets = Objects.requireNonNull(pets, "pets cannot be null");
         }
         
         public Integer getId() {
           return this.id;
         }
         
-        public void setId(Integer id) {
+        public Person<T> setId(Integer id) {
           this.id = id;
+          return this;
         }
         
         public String getFirstName() {
           return this.firstName;
         }
         
-        public void setFirstName(String firstName) {
+        public Person<T> setFirstName(String firstName) {
           this.firstName = firstName;
+          return this;
         }
         
         public String getLastName() {
           return this.lastName;
         }
         
-        public void setLastName(String lastName) {
+        public Person<T> setLastName(String lastName) {
           this.lastName = lastName;
+          return this;
         }
         
-        public String getSpecial() {
+        public T getSpecial() {
           return this.special;
         }
         
-        public void setSpecial(String special) {
+        public Person<T> setSpecial(T special) {
           this.special = special;
+          return this;
         }
         
         public List<Pet> getPets() {
           return this.pets;
         }
         
-        public void setPets(List<Pet> pets) {
+        public Person<T> setPets(List<Pet> pets) {
           this.pets = pets;
+          return this;
         }
         
       }
@@ -149,8 +155,10 @@ describe("Service with responses", async () => {
     expect(file).toBe(d`
       package io.typespec.generated.models;
       
+      import java.util.Objects;
       
-      public class Pet {
+      
+      public final class Pet {
         
         /**
         * Represents union types [String, Integer]
@@ -163,7 +171,7 @@ describe("Service with responses", async () => {
         }
         
         public Pet(Object name, Person<Integer> owner) {
-          this.name = name;
+          this.name = Objects.requireNonNull(name, "name cannot be null");
           this.owner = owner;
         }
         
@@ -171,16 +179,18 @@ describe("Service with responses", async () => {
           return this.name;
         }
         
-        public void setName(Object name) {
+        public Pet setName(Object name) {
           this.name = name;
+          return this;
         }
         
         public Person<Integer> getOwner() {
           return this.owner;
         }
         
-        public void setOwner(Person<Integer> owner) {
+        public Pet setOwner(Person<Integer> owner) {
           this.owner = owner;
+          return this;
         }
         
       }
@@ -194,9 +204,10 @@ describe("Service with responses", async () => {
       package io.typespec.generated.models;
       
       import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+      import java.util.Objects;
       
       @JsonIgnoreProperties({"cause", "stackTrace", "localizedMessage", "suppressed"})
-      public class CustomError extends Exception {
+      public final class CustomError extends Exception {
         
         private Integer code;
         private String message;
@@ -206,46 +217,55 @@ describe("Service with responses", async () => {
         }
         
         public CustomError(Integer code, String message) {
-          this.code = code;
-          this.message = message;
+          this.code = Objects.requireNonNull(code, "code cannot be null");
+          this.message = Objects.requireNonNull(message, "message cannot be null");
         }
         
         public Integer getCode() {
           return this.code;
         }
         
-        public void setCode(Integer code) {
+        public CustomError setCode(Integer code) {
           this.code = code;
+          return this;
         }
         
         public String getMessage() {
           return this.message;
         }
         
-        public void setMessage(String message) {
+        public CustomError setMessage(String message) {
           this.message = message;
+          return this;
         }
         
       }
     `)
   })
 
-  it("Emits ResponseWithHeaders Model", () => {
-    const file = findEmittedFile(result, "io.typespec.generated.models.ResponseWithHeaders.java");
+  it("Emits Response Model", () => {
+    const file = findEmittedFile(result, "io.typespec.generated.models.Response.java");
 
     expect(file).toBe(d`
       package io.typespec.generated.models;
       
       import org.springframework.util.MultiValueMap;
       
-      public class ResponseWithHeaders<T> {
+      public class Response<T> {
         private T response;
         private MultiValueMap<String, String> headers;
-        public ResponseWithHeaders(T response, MultiValueMap<String, String> headers) {
+        
+        public Response(T response, MultiValueMap<String, String> headers) {
           this.response = response;
           this.headers = headers;
         }
-        public ResponseWithHeaders(MultiValueMap<String, String> headers) {
+        
+        public Response(T response) {
+          this.response = response;
+          this.headers = null;
+        }
+        
+        public Response(MultiValueMap<String, String> headers) {
           this.response = null;
           this.headers = headers;
         }
@@ -286,29 +306,29 @@ describe("Service with responses", async () => {
     `)
   })
 
-  it("Emits GetPersonResponse", () => {
+  it("Emits GetPersonResponse response", () => {
     const file = findEmittedFile(result, "io.typespec.generated.responses.GetPersonResponse.java");
 
     expect(file).toBe(d`
       package io.typespec.generated.responses;
       
-      import io.typespec.generated.models.ResponseWithHeaders;
+      import io.typespec.generated.models.Response;
       import io.typespec.generated.models.Person;
       import io.typespec.generated.models.NoBody;
       
       public class GetPersonResponse {
-        private ResponseWithHeaders<Person<String>> person;
+        private Response<Person<String>> person;
         private NoBody notFoundResponse;
         
         public GetPersonResponse() {
           
         }
         
-        public ResponseWithHeaders<Person<String>> getPerson() {
+        public Response<Person<String>> getPerson() {
           return this.person;
         }
         
-        public void setPerson(ResponseWithHeaders<Person<String>> value) {
+        public void setPerson(Response<Person<String>> value) {
           this.person = value;
         }
         
@@ -318,6 +338,41 @@ describe("Service with responses", async () => {
         
         public void setNotFoundResponse(NoBody value) {
           this.notFoundResponse = value;
+        }
+      }
+    `)
+  })
+
+  it("Emits DeleteResponse response", () => {
+    const file = findEmittedFile(result, "io.typespec.generated.responses.DeleteResponse.java");
+
+    expect(file).toBe(d`
+      package io.typespec.generated.responses;
+      
+      import io.typespec.generated.models.NoBody;
+      
+      public class DeleteResponse {
+        private NoBody okResponse;
+        private NoBody noContentResponse;
+        
+        public DeleteResponse() {
+          
+        }
+        
+        public NoBody getOkResponse() {
+          return this.okResponse;
+        }
+        
+        public void setOkResponse(NoBody value) {
+          this.okResponse = value;
+        }
+        
+        public NoBody getNoContentResponse() {
+          return this.noContentResponse;
+        }
+        
+        public void setNoContentResponse(NoBody value) {
+          this.noContentResponse = value;
         }
       }
     `)
@@ -401,7 +456,7 @@ describe("Service with responses", async () => {
       import org.springframework.beans.factory.annotation.Autowired;
       import org.springframework.web.bind.annotation.GetMapping;
       import org.springframework.http.ResponseEntity;
-      import io.typespec.generated.models.ResponseWithHeaders;
+      import io.typespec.generated.models.Response;
       import java.util.List;
       import io.typespec.generated.models.Pet;
       import org.springframework.http.HttpStatus;
@@ -419,7 +474,7 @@ describe("Service with responses", async () => {
         @GetMapping("/pets")
         public ResponseEntity<?> listPets() {
           try {
-            ResponseWithHeaders<List<Pet>> returnedBody = petsService.listPets();
+            Response<List<Pet>> returnedBody = petsService.listPets();
             return new ResponseEntity<>(returnedBody.getResponse(), returnedBody.getHeaders(), HttpStatus.valueOf(200));
           } catch (CustomError e) {
             return new ResponseEntity<>(e, HttpStatus.valueOf(400));
@@ -427,5 +482,10 @@ describe("Service with responses", async () => {
         }
       }
     `);
+  });
+
+  it("Emits Project Configuration Files", () => {
+    // Simply call findEmittedFile to check files were emitted
+    findEmittedFile(result, "pom.xml");
   });
 })

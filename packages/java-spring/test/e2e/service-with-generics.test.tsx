@@ -51,55 +51,61 @@ describe("Service with generics", async () => {
     expect(file).toBe(d`
       package io.typespec.generated.models;
       
+      import java.util.Objects;
       
-      public class Person<T> {
+      
+      public final class Person<T> {
         
         private Integer id;
         private String name;
         private Integer age;
-        private Integer special;
+        private T special;
         
         public Person() {
           
         }
         
-        public Person(Integer id, String name, Integer age, Integer special) {
-          this.id = id;
-          this.name = name;
-          this.age = age;
-          this.special = special;
+        public Person(Integer id, String name, Integer age, T special) {
+          this.id = Objects.requireNonNull(id, "id cannot be null");
+          this.name = Objects.requireNonNull(name, "name cannot be null");
+          this.age = Objects.requireNonNull(age, "age cannot be null");
+          this.special = Objects.requireNonNull(special, "special cannot be null");
         }
         
         public Integer getId() {
           return this.id;
         }
         
-        public void setId(Integer id) {
+        public Person<T> setId(Integer id) {
           this.id = id;
+          return this;
         }
         
         public String getName() {
           return this.name;
         }
         
-        public void setName(String name) {
+        public Person<T> setName(String name) {
           this.name = name;
+          return this;
         }
         
         public Integer getAge() {
           return this.age;
         }
         
-        public void setAge(Integer age) {
+        public Person<T> setAge(Integer age) {
           this.age = age;
+          return this;
         }
         
-        public Integer getSpecial() {
+        public T getSpecial() {
           return this.special;
         }
         
-        public void setSpecial(Integer special) {
+        public Person<T> setSpecial(T special) {
           this.special = special;
+          return this;
         }
         
       }
@@ -153,5 +159,10 @@ describe("Service with generics", async () => {
         }
       }
     `);
+  });
+
+  it("Emits Project Configuration Files", () => {
+    // Simply call findEmittedFile to check files were emitted
+    findEmittedFile(result, "pom.xml");
   });
 })
