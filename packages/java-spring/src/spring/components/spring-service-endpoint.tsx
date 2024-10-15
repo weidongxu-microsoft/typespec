@@ -14,6 +14,12 @@ export interface SpringServiceEndpointProps {
   children?: Children;
 }
 
+/**
+ * Creates a spring service endpoint method for a given operation. Handles definitions like responses, query params,
+ * path params, headers etc. Calls upon generated business logic interface for logic.
+ *
+ * @param op The HttpOperation to create the endpoint for
+ */
 export function SpringServiceEndpoint({ op, children }: SpringServiceEndpointProps) {
   const route = op.verb;
   const path = <jv.Value value={op.path} />;

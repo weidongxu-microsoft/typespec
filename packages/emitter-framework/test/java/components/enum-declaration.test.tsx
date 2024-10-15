@@ -1,9 +1,8 @@
-import { describe, expect, it } from "vitest";
-import { getEmitOutput } from "../utils.js";
-import { Enum, Model } from "@typespec/compiler";
-import { EnumDeclaration } from "../../../src/java/index.js";
 import { d } from "@alloy-js/core/testing";
-
+import { Enum } from "@typespec/compiler";
+import { describe, expect, it } from "vitest";
+import { EnumDeclaration } from "../../../src/java/index.js";
+import { getEmitOutput } from "../utils.js";
 
 describe("Typespec Enum Declaration", () => {
   it("Takes enum with no custom values", async () => {
@@ -14,7 +13,7 @@ describe("Typespec Enum Declaration", () => {
           SOUTH,
           WEST,
         }
-    `
+    `;
 
     const output = await getEmitOutput(code, (program) => {
       const Foo = program.resolveTypeReference("Direction")[0]! as Enum;
@@ -30,8 +29,8 @@ describe("Typespec Enum Declaration", () => {
         SOUTH,
         WEST
       }
-    `)
-  })
+    `);
+  });
 
   it("Takes enum with custom string values", async () => {
     const code = `
@@ -41,7 +40,7 @@ describe("Typespec Enum Declaration", () => {
           SOUTH: "south",
           WEST: "west",
         }
-    `
+    `;
 
     const output = await getEmitOutput(code, (program) => {
       const Foo = program.resolveTypeReference("Direction")[0]! as Enum;
@@ -63,12 +62,12 @@ describe("Typespec Enum Declaration", () => {
           return this.value;
         }
         
-        private Direction(String value) {
+        Direction(String value) {
           this.value = value;
         }
       }
-    `)
-  })
+    `);
+  });
 
   it("Takes enum with custom number values", async () => {
     const code = `
@@ -78,7 +77,7 @@ describe("Typespec Enum Declaration", () => {
           HUNDRED: 100,
           THOUSAND: 1000,
         }
-    `
+    `;
 
     const output = await getEmitOutput(code, (program) => {
       const Foo = program.resolveTypeReference("Foo")[0]! as Enum;
@@ -100,12 +99,12 @@ describe("Typespec Enum Declaration", () => {
           return this.value;
         }
         
-        private Foo(int value) {
+        Foo(int value) {
           this.value = value;
         }
       }
-    `)
-  })
+    `);
+  });
 
   it("Takes enum with some custom values", async () => {
     const code = `
@@ -115,7 +114,7 @@ describe("Typespec Enum Declaration", () => {
           HUNDRED: 100,
           THOUSAND: 1000,
         }
-    `
+    `;
 
     const output = await getEmitOutput(code, (program) => {
       const Foo = program.resolveTypeReference("Foo")[0]! as Enum;
@@ -137,10 +136,10 @@ describe("Typespec Enum Declaration", () => {
           return this.value;
         }
         
-        private Foo(int value) {
+        Foo(int value) {
           this.value = value;
         }
       }
-    `)
-  })
-})
+    `);
+  });
+});

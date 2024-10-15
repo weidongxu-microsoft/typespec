@@ -6,7 +6,7 @@ import { TypeExpression } from "@typespec/emitter-framework/java";
 import { HttpOperation } from "@typespec/http";
 
 /**
- * Emit models used for custom response types
+ * Emit models used for custom response types. Emits class with name `${operationName}Response`
  *
  * @param ops Operations in the program
  */
@@ -37,7 +37,7 @@ export function emitResponseModels(ops: HttpOperation[]) {
               // prettier-ignore
               const finalReturnType = requiresHeaders ? (
                 <>
-                    {refkey("ResponseWithHeaders")}<jv.Generics types={[returnType]} />
+                    {refkey("Response")}<jv.Generics types={[returnType]} />
                 </>
               ) : returnType;
 
@@ -66,7 +66,7 @@ export function emitResponseModels(ops: HttpOperation[]) {
               // prettier-ignore
               const finalReturnType = requiresHeaders ? (
                 <>
-                  {refkey("ResponseWithHeaders")}<jv.Generics types={[returnType]} />
+                  {refkey("Response")}<jv.Generics types={[returnType]} />
                 </>
               ) : (
                 returnType

@@ -1,5 +1,6 @@
 import { Children, OutputDirectory, OutputFile, render } from "@alloy-js/core";
 import { Output } from "@alloy-js/core/stc";
+import { createJavaNamePolicy, javaUtil } from "@alloy-js/java";
 import { PackageDirectory, SourceFile } from "@alloy-js/java/stc";
 import { Program } from "@typespec/compiler";
 import { getProgram } from "./test-host.js";
@@ -8,7 +9,7 @@ export async function getEmitOutput(tspCode: string, cb: (program: Program) => C
   const program = await getProgram(tspCode);
 
   const res = render(
-    Output().children(
+    Output({ namePolicy: createJavaNamePolicy(), externals: [javaUtil] }).children(
       PackageDirectory({ package: "me.test.code" }).children(
         SourceFile({ path: "Test.java" }).children(cb(program)),
       ),
@@ -31,7 +32,9 @@ export async function getMultiEmitOutput(
   const program = await getProgram(tspCode);
 
   const res = render(
-    Output().children(PackageDirectory({ package: "me.test.code" }).children(cb(program))),
+    Output({ namePolicy: createJavaNamePolicy(), externals: [javaUtil] }).children(
+      PackageDirectory({ package: "me.test.code" }).children(cb(program)),
+    ),
   );
   const testFile = findFile(res, testFileName);
 

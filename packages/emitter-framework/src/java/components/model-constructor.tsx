@@ -23,7 +23,7 @@ export function ModelConstructor(props: ModelConstructorProps) {
   });
 
   return (
-    <Constructor public parameters={parameters}>
+    <Constructor public parameters={parameters} {...props}>
       {mapJoin(
         properties,
         (property) => (

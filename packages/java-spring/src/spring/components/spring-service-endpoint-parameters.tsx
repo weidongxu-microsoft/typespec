@@ -10,6 +10,12 @@ import {
 } from "@typespec/http";
 import { SpringRouteAnnotation } from "./route-annotations.js";
 
+/**
+ * Handles the parameters passed to the {@link SpringServiceEndpoint} method. Handles
+ * which annotations to generate based on options of HttpOperation
+ *
+ * @param op The HttpOperation to create the endpoint for
+ */
 export function SpringEndpointParameters(op: HttpOperation) {
   const bodyParams = op.parameters.body;
   const headerParams = $.httpRequest.getParameters(op, "header");

@@ -18,29 +18,40 @@ import {
   emitServices,
   OperationsGroup,
 } from "./common/index.js";
-import { NoBody, ResponseWithHeaders } from "./components/index.js";
+import { NoBody, Response } from "./components/index.js";
 import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
 
 const RestNamespace = "TypeSpec.Rest";
 const ResourceNamespace = "Resource";
 
-const projectConfig: MavenProjectConfig = {
-  groupId: "io.typespec",
-  artifactId: "generated",
-  version: "1.0.0",
-  javaVersion: 8,
-  build: {
-    plugins: [
-      {
-        groupId: "org.springframework.boot",
-        artifactId: "spring-boot-maven-plugin",
-      },
-    ],
-  },
-};
-
+/**
+ * This emitter takes a few custom options:
+ * - springVersion: The version of spring boot used in the generated code
+ * - javaVersion: Version of java maven will compile with, by default it is 8
+ * - package: Package that all the java code is outputted to, by default it is 'io.typespec.generated'
+ * - groupId: Maven groupId for the project, by default it is 'io.typespec'
+ * - artifactId: Maven artifactId for the project, by default it is 'generated'
+ * - version: Maven version for the project, by default it is '1.0.0'
+ */
 export async function $onEmit(context: EmitContext) {
+  const options = context.options;
+  // Maven config, takes options into emitter
+  const projectConfig: MavenProjectConfig = {
+    groupId: options?.groupId ?? "io.typespec",
+    artifactId: options?.artifactId ?? "generated",
+    version: options?.version ?? "1.0.0",
+    javaVersion: options?.javaVersion ?? 8,
+    build: {
+      plugins: [
+        {
+          groupId: "org.springframework.boot",
+          artifactId: "spring-boot-maven-plugin",
+        },
+      ],
+    },
+  };
+
   // Query types needed in program, models, interfaces etc
   const types = queryTypes(context);
 
@@ -72,10 +83,55 @@ export async function $onEmit(context: EmitContext) {
     {} as Record<string, OperationsGroup>,
   );
 
+  // Query TypeSpec types that may need to be emitted based on responses from http operations
+  serviceOperations.forEach((op) => {
+    const responseModels = op.responses.map((res) => res.type);
+    responseModels.forEach((model) => {
+      if (isNoEmit(model)) {
+        return;
+      }
+
+      types.dataTypes.push(model);
+    });
+  });
+
   // Obtain auth scheme
   // For now we are only obtaining auth on the first service, and are taking the first auth scheme.
   // Currently not supporting multiple auth schemes or per operation overrides.
   const auth = resolveAuthentication(services[0][0] as HttpService);
+
+  // The following is a bit hacky but is required until a better solution is found.
+  // Currently if you declare a generic model and use the template type as the type of
+  // a property, like the following
+  /// model Person<T> {
+  //  name: T;
+  // }
+  // When using the model like Person<string>, when the model is emitted
+  // it uses "String" instead of "T". This happens because a different model object is passed
+  // to the emitter for each instance, only the instance with the actual declaration will
+  // emit correctly, all the other ones always replace the model property type with the passed type (in this case String).
+  //
+  // What this fix is doing is finding the declaration model instance in the array (which is the first), and moving it to
+  // the back of the array to ensure it is the actual one emitted.
+  //
+  // Can't just emit a model with a name once since currently refkeys depend on the Model instance and not the name. So maybe
+  // a solution is to change model refkeys to use the name instead of the model type. Refkeys aren't name based as I
+  // believe it could lead to some referential conflicts. For now this hacky fix
+  // works but probably needs to be changed
+  const modelNameSet = new Set<string>();
+  types.dataTypes
+    .filter((type) => type.kind === "Model")
+    .forEach((type) => {
+      modelNameSet.add(type.name);
+    });
+  modelNameSet.forEach((modelName) => {
+    // Get first entry and move to back
+    // @ts-expect-error Name might not exist
+    const modelIndex = types.dataTypes.findIndex((type) => type?.name === modelName);
+    const removedModel = types.dataTypes[modelIndex];
+    types.dataTypes.splice(modelIndex, 1);
+    types.dataTypes.push(removedModel);
+  });
 
   const outputDir = context.emitterOutputDir;
   return (
@@ -84,7 +140,12 @@ export async function $onEmit(context: EmitContext) {
       basePath={outputDir}
       namePolicy={createJavaNamePolicy()}
     >
-      <SpringProject name="TestProject" mavenProjectConfig={projectConfig}>
+      <SpringProject
+        name="TestProject"
+        mavenProjectConfig={projectConfig}
+        useAuth={(auth?.schemes?.length ?? 0) > 0}
+        springVersion={options?.springVersion}
+      >
         <jv.PackageDirectory package="io.typespec.generated">
           <jv.SourceFile path="MainApplication.java">
             <jv.Annotation type={springFramework.SpringBootApplication} />
@@ -124,7 +185,7 @@ export async function $onEmit(context: EmitContext) {
                 );
               })}
             <NoBody />
-            <ResponseWithHeaders />
+            <Response />
           </jv.PackageDirectory>
           <jv.PackageDirectory package="controllers">
             {emitOperations(httpOperations)}
@@ -181,7 +242,7 @@ export function isNoEmit(type: Type): boolean {
     if ([HttpNamespace].includes(fullNamespaceName)) {
       return true;
     }
-    if ([RestNamespace].includes(fullNamespaceName)) {
+    if (fullNamespaceName.startsWith(RestNamespace)) {
       return true;
     }
     if ([ResourceNamespace].includes(fullNamespaceName)) {

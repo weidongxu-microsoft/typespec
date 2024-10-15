@@ -23,7 +23,9 @@ describe("TypeSpec Model Declaration", () => {
     expect(output).toBe(d`
       package me.test.code;
       
-      public class Widget {
+      import java.util.Objects;
+      
+      public final class Widget {
         
         private String id;
         private Integer weight;
@@ -34,33 +36,36 @@ describe("TypeSpec Model Declaration", () => {
         }
         
         public Widget(String id, Integer weight, String color) {
-          this.id = id;
-          this.weight = weight;
-          this.color = color;
+          this.id = Objects.requireNonNull(id, "id cannot be null");
+          this.weight = Objects.requireNonNull(weight, "weight cannot be null");
+          this.color = Objects.requireNonNull(color, "color cannot be null");
         }
         
         public String getId() {
           return this.id;
         }
         
-        public void setId(String id) {
+        public Widget setId(String id) {
           this.id = id;
+          return this;
         }
         
         public Integer getWeight() {
           return this.weight;
         }
         
-        public void setWeight(Integer weight) {
+        public Widget setWeight(Integer weight) {
           this.weight = weight;
+          return this;
         }
         
         public String getColor() {
           return this.color;
         }
         
-        public void setColor(String color) {
+        public Widget setColor(String color) {
           this.color = color;
+          return this;
         }
         
       }
@@ -85,7 +90,9 @@ describe("TypeSpec Model Declaration", () => {
     expect(output).toBe(d`
       package me.test.code;
       
-      public class Widget<T> {
+      import java.util.Objects;
+      
+      public final class Widget<T> {
         
         private String id;
         private T item;
@@ -95,24 +102,26 @@ describe("TypeSpec Model Declaration", () => {
         }
         
         public Widget(String id, T item) {
-          this.id = id;
-          this.item = item;
+          this.id = Objects.requireNonNull(id, "id cannot be null");
+          this.item = Objects.requireNonNull(item, "item cannot be null");
         }
         
         public String getId() {
           return this.id;
         }
         
-        public void setId(String id) {
+        public Widget<T> setId(String id) {
           this.id = id;
+          return this;
         }
         
         public T getItem() {
           return this.item;
         }
         
-        public void setItem(T item) {
+        public Widget<T> setItem(T item) {
           this.item = item;
+          return this;
         }
         
       }
@@ -149,9 +158,10 @@ describe("TypeSpec Model Declaration", () => {
     expect(output).toBe(d`
       package me.test.code;
       
+      import java.util.Objects;
       import me.test.code.base.BaseModel;
       
-      public class Widget extends BaseModel {
+      public final class Widget extends BaseModel {
         
         private String id;
         
@@ -160,15 +170,16 @@ describe("TypeSpec Model Declaration", () => {
         }
         
         public Widget(String id) {
-          this.id = id;
+          this.id = Objects.requireNonNull(id, "id cannot be null");
         }
         
         public String getId() {
           return this.id;
         }
         
-        public void setId(String id) {
+        public Widget setId(String id) {
           this.id = id;
+          return this;
         }
         
       }
@@ -205,9 +216,10 @@ describe("TypeSpec Model Declaration", () => {
     expect(output).toBe(d`
       package me.test.code;
       
+      import java.util.Objects;
       import me.test.code.base.BaseModel;
       
-      public class Widget extends BaseModel<String> {
+      public final class Widget extends BaseModel<String> {
         
         private String id;
         
@@ -216,15 +228,16 @@ describe("TypeSpec Model Declaration", () => {
         }
         
         public Widget(String id) {
-          this.id = id;
+          this.id = Objects.requireNonNull(id, "id cannot be null");
         }
         
         public String getId() {
           return this.id;
         }
         
-        public void setId(String id) {
+        public Widget setId(String id) {
           this.id = id;
+          return this;
         }
         
       }
@@ -261,9 +274,10 @@ describe("TypeSpec Model Declaration", () => {
     expect(output).toBe(d`
       package me.test.code;
       
+      import java.util.Objects;
       import me.test.code.base.BaseModel;
       
-      public class Widget<T> extends BaseModel<T> {
+      public final class Widget<T> extends BaseModel<T> {
         
         private T id;
         
@@ -272,15 +286,16 @@ describe("TypeSpec Model Declaration", () => {
         }
         
         public Widget(T id) {
-          this.id = id;
+          this.id = Objects.requireNonNull(id, "id cannot be null");
         }
         
         public T getId() {
           return this.id;
         }
         
-        public void setId(T id) {
+        public Widget<T> setId(T id) {
           this.id = id;
+          return this;
         }
         
       }
