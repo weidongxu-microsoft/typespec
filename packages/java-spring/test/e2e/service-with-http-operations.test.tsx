@@ -167,7 +167,7 @@ describe("Service with all http decorators", async () => {
 
     expect(file).toBe(d`
       package io.typespec.generated.services;
-  
+      
       import java.util.List;
       import io.typespec.generated.models.Person;
       

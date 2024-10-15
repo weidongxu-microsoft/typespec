@@ -1,52 +1,47 @@
-import "@typespec/http";
+import "@typespec/rest";
 
 using TypeSpec.Http;
 
+
 @service
-namespace DemoService;
-model Pet {
-  name: string;
-  tag?: string;
-  age: int32;
-}
+@useAuth(BearerAuth)
+namespace DemoService {
 
-model Toy {
-  id: int64;
-  petId: int64;
-  name: string;
-}
+  @error
+  model CustomError {
+    @statusCode _: 400;
+    code: int32;
+    message: string;
+  }
 
-@error
-model Error {
-  code: int32;
-  message: string;
-}
+  @route("/people")
+  namespace People {
+    model Person<T> {
+      id: int32;
+      firstName: string;
+      lastName: string;
+      special: T;
+      pets: Pets.Pet[];
+    }
 
+    @get op getPerson(@path id: int32): {
+      @body body: Person<string>;
+      @header testHeader: string;
+    } | NotFoundResponse | CustomError;
+    @get op listPeople(): Person<string>[] | CustomError;
+    @post op createPerson(@body person: Person<string>): CreatedResponse | CustomError;
+  }
 
-model ResponsePage<Item> {
-  items: Item[];
-  nextLink?: string;
-}
+  @route("/pets")
+  namespace Pets {
+    model Pet {
+      name: string | int32;
+      owner?: People.Person<int32>;
+    }
 
-model PetId {
-  @path petId: int32;
-  @header header: string;
-  @query query: string;
-}
-
-@route("/pets")
-namespace Pets {
-
-  @delete op delete(...PetId): OkResponse | NoContentResponse | Error;
-
-  op list(@query nextLink?: string): ResponsePage<Pet> | Error;
-
-  op read(...PetId): Pet | Error;
-
-  @post op create(@body pet: Pet): Pet | Error;
-}
-
-@route("/pets/{petId}/toys")
-namespace ListPetToys {
-  op list(@path petId: string, @query nameFilter: string): ResponsePage<Toy> | Error;
+    op listPets(): {
+     @body body: Pet[];
+     @header x: string;
+    } | CustomError;
+  }
 }

@@ -343,41 +343,6 @@ describe("Service with responses", async () => {
     `)
   })
 
-  it("Emits DeleteResponse response", () => {
-    const file = findEmittedFile(result, "io.typespec.generated.responses.DeleteResponse.java");
-
-    expect(file).toBe(d`
-      package io.typespec.generated.responses;
-      
-      import io.typespec.generated.models.NoBody;
-      
-      public class DeleteResponse {
-        private NoBody okResponse;
-        private NoBody noContentResponse;
-        
-        public DeleteResponse() {
-          
-        }
-        
-        public NoBody getOkResponse() {
-          return this.okResponse;
-        }
-        
-        public void setOkResponse(NoBody value) {
-          this.okResponse = value;
-        }
-        
-        public NoBody getNoContentResponse() {
-          return this.noContentResponse;
-        }
-        
-        public void setNoContentResponse(NoBody value) {
-          this.noContentResponse = value;
-        }
-      }
-    `)
-  })
-
   it("Emits PeopleController", () => {
     const file = findEmittedFile(result, "io.typespec.generated.controllers.PeopleController.java");
 
@@ -480,6 +445,42 @@ describe("Service with responses", async () => {
             return new ResponseEntity<>(e, HttpStatus.valueOf(400));
           }
         }
+      }
+    `);
+  });
+
+  it("Emits PeopleService", () => {
+    const file = findEmittedFile(result, "io.typespec.generated.services.PeopleService.java");
+
+    expect(file).toBe(d`
+      package io.typespec.generated.services;
+      
+      import java.util.List;
+      import io.typespec.generated.models.Person;
+      import io.typespec.generated.models.CustomError;
+      import io.typespec.generated.responses.GetPersonResponse;
+      
+      public interface PeopleService {
+        GetPersonResponse getPerson(Integer id) throws CustomError;
+        List<Person<String>> listPeople() throws CustomError;
+        void createPerson(Person<String> person) throws CustomError;
+      }
+    `);
+  });
+
+  it("Emits PetsService", () => {
+    const file = findEmittedFile(result, "io.typespec.generated.services.PetsService.java");
+
+    expect(file).toBe(d`
+      package io.typespec.generated.services;
+      
+      import java.util.List;
+      import io.typespec.generated.models.CustomError;
+      import io.typespec.generated.models.Pet;
+      import io.typespec.generated.models.Response;
+      
+      public interface PetsService {
+        Response<List<Pet>> listPets() throws CustomError;
       }
     `);
   });

@@ -523,18 +523,33 @@ describe("Service with all http decorators", async () => {
     const file = findEmittedFile(result, "io.typespec.generated.responses.DeleteResponse.java");
 
     expect(file).toBe(d`
-      package io.typespec.generated.services;
+      package io.typespec.generated.responses;
       
-      import io.typespec.generated.models.Error;
-      import io.typespec.generated.models.ResponsePage;
-      import io.typespec.generated.models.Pet;
-      import io.typespec.generated.responses.DeleteResponse;
+      import io.typespec.generated.models.NoBody;
       
-      public interface PetsService {
-        DeleteResponse delete(String header, Integer petId, String query) throws Error;
-        ResponsePage<Pet> list(String nextLink) throws Error;
-        Pet read(String header, Integer petId, String query) throws Error;
-        Pet create(Pet pet) throws Error;
+      public class DeleteResponse {
+        private NoBody okResponse;
+        private NoBody noContentResponse;
+        
+        public DeleteResponse() {
+          
+        }
+        
+        public NoBody getOkResponse() {
+          return this.okResponse;
+        }
+        
+        public void setOkResponse(NoBody value) {
+          this.okResponse = value;
+        }
+        
+        public NoBody getNoContentResponse() {
+          return this.noContentResponse;
+        }
+        
+        public void setNoContentResponse(NoBody value) {
+          this.noContentResponse = value;
+        }
       }
     `);
   });
