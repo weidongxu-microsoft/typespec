@@ -56,7 +56,9 @@ export function findEmittedFile(res: Record<string, string>, path: string): stri
 
   function findFileWorker(res: Record<string, string>, path: string): string | null {
     for (const key in res) {
-      if (key.includes(path)) {
+      // Replace path separator with '.', so we can do a package lookup like 'me.test.code.MyClassFile.java'
+      const newPath = key.replaceAll(/[\\/]/g, ".");
+      if (newPath.includes(path)) {
         return res[key];
       }
     }
