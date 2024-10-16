@@ -23,7 +23,6 @@ import { SpringProject } from "./spring/components/index.js";
 import { springFramework } from "./spring/libraries/index.js";
 
 const RestNamespace = "TypeSpec.Rest";
-const ResourceNamespace = "Resource";
 
 /**
  * This emitter takes a few custom options:
@@ -243,9 +242,6 @@ export function isNoEmit(type: Type): boolean {
       return true;
     }
     if (fullNamespaceName.startsWith(RestNamespace)) {
-      return true;
-    }
-    if ([ResourceNamespace].includes(fullNamespaceName)) {
       return true;
     }
   }
