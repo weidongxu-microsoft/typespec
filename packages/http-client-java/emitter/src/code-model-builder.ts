@@ -98,7 +98,6 @@ import {
   Visibility,
   getAuthentication,
 } from "@typespec/http";
-import { getSegment } from "@typespec/rest";
 import { getAddedOnVersions } from "@typespec/versioning";
 import { fail } from "assert";
 import pkg from "lodash";
@@ -2827,22 +2826,17 @@ export class CodeModelBuilder {
   }
 
   private isReadOnly(target: SdkModelPropertyType): boolean {
-    const segment = target.__raw ? getSegment(this.program, target.__raw) !== undefined : false;
-    if (segment) {
-      return true;
+    const visibility = target.kind === "property" ? target.visibility : undefined;
+    if (visibility) {
+      return (
+        !visibility.includes(Visibility.All) &&
+        !visibility.includes(Visibility.Create) &&
+        !visibility.includes(Visibility.Update) &&
+        !visibility.includes(Visibility.Delete) &&
+        !visibility.includes(Visibility.Query)
+      );
     } else {
-      const visibility = target.kind === "property" ? target.visibility : undefined;
-      if (visibility) {
-        return (
-          !visibility.includes(Visibility.All) &&
-          !visibility.includes(Visibility.Create) &&
-          !visibility.includes(Visibility.Update) &&
-          !visibility.includes(Visibility.Delete) &&
-          !visibility.includes(Visibility.Query)
-        );
-      } else {
-        return false;
-      }
+      return false;
     }
   }
 
