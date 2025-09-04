@@ -348,7 +348,7 @@ public class FluentGen extends Javagen {
 
             // Readme and Changelog
             if (isSdkIntegration) {
-                javaPackage.addReadmeMarkdown(project);
+                javaPackage.addReadmeMarkdown(project, client.getServiceClient().getMethodGroupClients());
                 javaPackage.addChangelogMarkdown(project.getChangelog());
                 if (fluentJavaSettings.isGenerateSamples() && project.getSdkRepositoryUri().isPresent()) {
                     javaPackage.addSampleMarkdown(fluentClient.getExamples(), sampleJavaFiles);

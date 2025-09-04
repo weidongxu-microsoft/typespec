@@ -5,6 +5,7 @@ package com.microsoft.typespec.http.client.generator.mgmt.model.javamodel;
 
 import com.microsoft.typespec.http.client.generator.core.extension.plugin.JavaSettings;
 import com.microsoft.typespec.http.client.generator.core.extension.plugin.NewPlugin;
+import com.microsoft.typespec.http.client.generator.core.model.clientmodel.MethodGroupClient;
 import com.microsoft.typespec.http.client.generator.core.model.javamodel.JavaFile;
 import com.microsoft.typespec.http.client.generator.core.model.javamodel.JavaPackage;
 import com.microsoft.typespec.http.client.generator.core.model.projectmodel.TextFile;
@@ -40,8 +41,8 @@ public class FluentJavaPackage extends JavaPackage {
         super(host);
     }
 
-    public void addReadmeMarkdown(FluentProject project) {
-        TextFile textFile = new TextFile("README.md", new ReadmeTemplate().write(project));
+    public void addReadmeMarkdown(FluentProject project, List<MethodGroupClient> mgs) {
+        TextFile textFile = new TextFile("README.md", new ReadmeTemplate().write(project, mgs));
         this.checkDuplicateFile(textFile.getFilePath());
         textFiles.add(textFile);
     }
