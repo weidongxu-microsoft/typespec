@@ -74,8 +74,10 @@ public class ReadmeTemplate extends com.microsoft.typespec.http.client.generator
                 for (ClientMethod m : mg.getClientMethods()) {
                     ProxyMethod p = m.getProxyMethod();
                     String route = p.getHttpMethod() + " " + p.getUrlPath();
-                    if (routes.add(route)) {
-                        clientsAndApis.append("- ")
+                    if (p.isSync() && !route.contains("{nextLink}") && routes.add(route)) {
+                        clientsAndApis.append("- ").append("route: ").append(route);
+                        clientsAndApis.append("  ")
+                            .append("method signature: ")
                             .append(p.getReturnType())
                             .append(" ")
                             .append(p.getName())
@@ -85,14 +87,17 @@ public class ReadmeTemplate extends com.microsoft.typespec.http.client.generator
                                 .map(param -> param.getClientType() + " " + param.getName())
                                 .collect(Collectors.joining(", ")))
                             .append(")");
-                        clientsAndApis.append("  ").append(p.getDescription());
+                        clientsAndApis.append("description: ").append("  ").append(p.getDescription());
                     }
                 }
             }
 
-            String prompt
-                = "Summarize the key concept for the SDK. Below is the clients and APIs in the client. Output in markdown. If need to add section, start with ###."
-                    + "\n\n" + clientsAndApis;
+            String prompt = "Summarize the key concept for the SDK. Below is the clients and APIs in the client.\n"
+                + "- Please focus on resource model and its CRUD (also, group your heading based on resource model). If there is action (POST) on resource model, also include them.\n"
+                + "- Do not detail the method signature or route. Write concise sentence describe the operation, based on the method and description.\n"
+                + "- For model name, do not include \"Inner\" suffix."
+                + "Output in markdown. For markdown heading, start with \"###\", do not use \"#\" or \"##\". Do not output any suggestion or what to do later.\n"
+                + "\n" + clientsAndApis;
 
             CreateResponsesRequest request
                 = new CreateResponsesRequest(CreateResponsesRequestModel.fromString("gpt-5-mini"), prompt)
