@@ -3,15 +3,17 @@
 
 package com.microsoft.typespec.http.client.generator.mgmt.template;
 
-import com.azure.ai.inference.ChatCompletionsClient;
-import com.azure.ai.inference.ChatCompletionsClientBuilder;
-import com.azure.ai.inference.models.ChatChoice;
-import com.azure.ai.inference.models.ChatCompletions;
-import com.azure.ai.inference.models.ChatCompletionsOptions;
-import com.azure.ai.inference.models.ChatRequestMessage;
-import com.azure.ai.inference.models.ChatRequestSystemMessage;
-import com.azure.ai.inference.models.ChatRequestUserMessage;
-import com.azure.ai.inference.models.ChatResponseMessage;
+import com.azure.ai.openai.responses.ResponsesClient;
+import com.azure.ai.openai.responses.ResponsesClientBuilder;
+import com.azure.ai.openai.responses.models.CreateResponsesRequest;
+import com.azure.ai.openai.responses.models.CreateResponsesRequestModel;
+import com.azure.ai.openai.responses.models.ResponsesAssistantMessage;
+import com.azure.ai.openai.responses.models.ResponsesItem;
+import com.azure.ai.openai.responses.models.ResponsesItemType;
+import com.azure.ai.openai.responses.models.ResponsesOutputContentText;
+import com.azure.ai.openai.responses.models.ResponsesReasoningConfiguration;
+import com.azure.ai.openai.responses.models.ResponsesReasoningConfigurationEffort;
+import com.azure.ai.openai.responses.models.ResponsesResponse;
 import com.azure.core.credential.AzureKeyCredential;
 import com.azure.core.util.Configuration;
 import com.azure.core.util.CoreUtils;
@@ -23,7 +25,6 @@ import com.microsoft.typespec.http.client.generator.mgmt.model.clientmodel.Fluen
 import com.microsoft.typespec.http.client.generator.mgmt.model.projectmodel.CodeSample;
 import com.microsoft.typespec.http.client.generator.mgmt.model.projectmodel.FluentProject;
 import com.microsoft.typespec.http.client.generator.mgmt.util.FluentUtils;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -61,7 +62,7 @@ public class ReadmeTemplate extends com.microsoft.typespec.http.client.generator
                 TemplateUtil.SAMPLE_CODES, sampleCodesBuilder.toString());
 
         if (Configuration.getGlobalConfiguration().contains("AZURE_API_KEY") && !CoreUtils.isNullOrEmpty(mgs)) {
-            ChatCompletionsClient client = new ChatCompletionsClientBuilder()
+            ResponsesClient client = new ResponsesClientBuilder()
                 .credential(new AzureKeyCredential(Configuration.getGlobalConfiguration().get("AZURE_API_KEY")))
                 .endpoint(Configuration.getGlobalConfiguration().get("AZURE_API_BASE"))
                 .buildClient();
@@ -93,20 +94,22 @@ public class ReadmeTemplate extends com.microsoft.typespec.http.client.generator
                 = "Summarize the key concept for the SDK. Below is the clients and APIs in the client. Output in markdown. If need to add section, start with ###."
                     + "\n\n" + clientsAndApis;
 
-            List<ChatRequestMessage> chatMessages = new ArrayList<>();
-            chatMessages.add(new ChatRequestSystemMessage("You are an expert Java SDK developer."));
-            chatMessages.add(new ChatRequestUserMessage(prompt));
+            CreateResponsesRequest request
+                = new CreateResponsesRequest(CreateResponsesRequestModel.fromString("gpt-5-mini"), prompt)
+                    .setReasoning(new ResponsesReasoningConfiguration(ResponsesReasoningConfigurationEffort.LOW));
+            ResponsesResponse response = client.createResponse(request);
 
-            ChatCompletions chatCompletions = client.complete(new ChatCompletionsOptions(chatMessages));
-            for (ChatChoice choice : chatCompletions.getChoices()) {
-                ChatResponseMessage message = choice.getMessage();
-                String output = message.getContent();
-
-                if (!CoreUtils.isNullOrEmpty(output)) {
-                    content = content.replace("## Key concepts", "## Key concepts\n\n" + output);
+            ResponsesAssistantMessage output = null;
+            for (ResponsesItem item : response.getOutput()) {
+                if (item.getType() == ResponsesItemType.MESSAGE) {
+                    output = (ResponsesAssistantMessage) item;
+                    break;
                 }
+            }
 
-                break;
+            if (output != null && !CoreUtils.isNullOrEmpty(output.getContent())) {
+                content = content.replace("## Key concepts",
+                    "## Key concepts\n\n" + ((ResponsesOutputContentText) output.getContent().get(0)).getText());
             }
         }
 
