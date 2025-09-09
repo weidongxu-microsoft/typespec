@@ -35,6 +35,20 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
         return;
       }
     });
+    await promises
+      .mkdir(resolvePath(context.emitterOutputDir, "src/main/java"), { recursive: true })
+      .catch((err) => {
+        if (err.code !== "EISDIR" && err.code !== "EEXIST") {
+          reportDiagnostic(program, {
+            code: "unknown-error",
+            format: {
+              errorMessage: `Failed to create output directory: ${context.emitterOutputDir}.`,
+            },
+            target: NoTarget,
+          });
+          return;
+        }
+      });
 
     const client = new OpenAI({
       baseURL: process.env["AZURE_API_BASE"] + "/openai/v1/",
