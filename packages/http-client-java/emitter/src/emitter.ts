@@ -78,7 +78,12 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
       const response = await client.responses.create({
         model: "gpt-5-mini",
         instructions:
-          "You are an expert Java developer. Generate a Java class based on the provided YAML model. Ensure the class includes appropriate data types, constructors, getters, setters, and annotations for JSON serialization. Follow Java best practices and conventions.",
+          "You are an expert Java developer. Generate a Java class based on the provided YAML model. Ensure the class includes appropriate data types, constructors, getters, setters, and annotations for JSON serialization. Follow Java best practices and conventions.\n" +
+          "Use this YAML and Java as an example of the input and output: ```" +
+          EXAMPLE_YAML +
+          "``` and ```" +
+          EXAMPLE_JAVA +
+          "```.",
         input: yaml,
         reasoning: { effort: "low" },
       });
