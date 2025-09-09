@@ -65,6 +65,7 @@
   },
   "dependencies": {
     "@autorest/codemodel": "~4.20.1",
+    "@azure/openai": "^2.0.0",
     "@typespec/http-client-java": "file:",
     "js-yaml": "~4.1.0",
     "lodash": "~4.17.21",

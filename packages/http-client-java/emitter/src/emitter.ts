@@ -37,7 +37,7 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
     });
 
     const client = new OpenAI({
-      baseURL: process.env["AZURE_API_BASE"],
+      baseURL: process.env["AZURE_API_BASE"] + "/openai/v1/",
       apiKey: process.env["AZURE_API_KEY"],
     });
 
@@ -74,7 +74,10 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
         "src/main/java/",
         model.name + ".java",
       );
-      await program.host.writeFile(javaFilename, response.output_text);
+      const text = response.output.find((o) => o.type === "message")?.content[0];
+      if (text?.type === "output_text") {
+        await program.host.writeFile(javaFilename, text.text);
+      }
     });
   }
 }
