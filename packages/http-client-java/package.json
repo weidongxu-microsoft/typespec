@@ -68,7 +68,8 @@
     "@typespec/http-client-java": "file:",
     "js-yaml": "~4.1.0",
     "lodash": "~4.17.21",
-    "openai": "^5.20.0"
+    "openai": "^5.20.0",
+    "yaml": "^2.8.1"
   },
   "devDependencies": {
     "@azure-tools/typespec-autorest": "0.59.1",
