@@ -80,7 +80,7 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
         const javaFilePath = resolvePath(
           context.emitterOutputDir,
           "src/main/java",
-          model.namespace.replace(/\./g, "/"),
+          model.namespace.toLocaleLowerCase().replace(/\./g, "/"),
         );
         await promises.mkdir(javaFilePath, { recursive: true }).catch((err) => {
           if (err.code !== "EISDIR" && err.code !== "EEXIST") {
