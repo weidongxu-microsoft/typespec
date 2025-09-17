@@ -35,20 +35,6 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
         return;
       }
     });
-    await promises
-      .mkdir(resolvePath(context.emitterOutputDir, "src/main/java"), { recursive: true })
-      .catch((err) => {
-        if (err.code !== "EISDIR" && err.code !== "EEXIST") {
-          reportDiagnostic(program, {
-            code: "unknown-error",
-            format: {
-              errorMessage: `Failed to create output directory: ${context.emitterOutputDir}.`,
-            },
-            target: NoTarget,
-          });
-          return;
-        }
-      });
 
     const client = new OpenAI({
       baseURL: process.env["AZURE_API_BASE"] + "/openai/v1/",
@@ -91,11 +77,24 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
           });
         });
 
-        const javaFilename = resolvePath(
+        const javaFilePath = resolvePath(
           context.emitterOutputDir,
-          "src/main/java/",
-          model.name + ".java",
+          "src/main/java",
+          model.namespace.replace(/\./g, "/"),
         );
+        await promises.mkdir(javaFilePath, { recursive: true }).catch((err) => {
+          if (err.code !== "EISDIR" && err.code !== "EEXIST") {
+            reportDiagnostic(program, {
+              code: "unknown-error",
+              format: {
+                errorMessage: `Failed to create output directory: ${context.emitterOutputDir}.`,
+              },
+              target: NoTarget,
+            });
+            return;
+          }
+        });
+        const javaFilename = resolvePath(javaFilePath, model.name + ".java");
         const messageOutput = response.output.find((o: any) => o.type === "message") as any;
         const text = messageOutput?.content?.[0];
         if (text?.type === "output_text") {
