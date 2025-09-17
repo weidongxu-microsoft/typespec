@@ -59,46 +59,107 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
       versioning: { previewStringRegex: /$/ },
     });
 
-    sdkContext.sdkPackage.models.forEach(async (model) => {
-      const filename = resolvePath(context.emitterOutputDir, model.name + ".yaml");
+    await Promise.all(
+      sdkContext.sdkPackage.models.map(async (model) => {
+        const filename = resolvePath(context.emitterOutputDir, model.name + ".yaml");
 
-      const yaml = stringify(
-        model,
-        (k, v) => {
-          if (typeof k === "string" && k.startsWith("__")) {
-            return undefined; // skip keys starting with "__" from the output
-          }
-          return v;
-        },
-        { lineWidth: 0 },
-      );
+        const yaml = stringify(
+          model,
+          (k, v) => {
+            if (typeof k === "string" && k.startsWith("__")) {
+              return undefined; // skip keys starting with "__" from the output
+            }
+            return v;
+          },
+          { lineWidth: 0 },
+        );
 
-      await program.host.writeFile(filename, yaml);
+        await program.host.writeFile(filename, yaml);
 
-      const response = await client.responses.create({
-        model: "gpt-5-mini",
-        instructions:
-          "You are an expert Java developer. Generate a Java class based on the provided YAML model. Ensure the class includes appropriate data types, constructors, getters, setters, and annotations for JSON serialization. Follow Java best practices and conventions.\n" +
-          "Use this YAML and Java as an example of the input and output: ```" +
-          EXAMPLE_YAML +
-          "``` and ```" +
-          EXAMPLE_JAVA +
-          "```.",
-        input: yaml,
-        reasoning: { effort: "low" },
-      });
+        const response = await retryWithExponentialBackoff(program, async () => {
+          return await client.responses.create({
+            model: "gpt-5-mini",
+            instructions:
+              "You are an expert Java developer. Generate a Java class based on the provided YAML model. Ensure the class includes appropriate data types, constructors, getters, setters, and annotations for JSON serialization. Follow Java best practices and conventions.\n" +
+              "Use this YAML and Java as an example of the input and output: ```" +
+              EXAMPLE_YAML +
+              "``` and ```" +
+              EXAMPLE_JAVA +
+              "```.",
+            input: yaml,
+            reasoning: { effort: "low" },
+          });
+        });
 
-      const javaFilename = resolvePath(
-        context.emitterOutputDir,
-        "src/main/java/",
-        model.name + ".java",
-      );
-      const text = response.output.find((o) => o.type === "message")?.content[0];
-      if (text?.type === "output_text") {
-        await program.host.writeFile(javaFilename, text.text);
-      }
-    });
+        const javaFilename = resolvePath(
+          context.emitterOutputDir,
+          "src/main/java/",
+          model.name + ".java",
+        );
+        const messageOutput = response.output.find((o: any) => o.type === "message") as any;
+        const text = messageOutput?.content?.[0];
+        if (text?.type === "output_text") {
+          await program.host.writeFile(javaFilename, text.text);
+        }
+      }),
+    );
   }
+}
+
+/**
+ * Retry function with exponential backoff for handling rate limits
+ */
+async function retryWithExponentialBackoff<T>(
+  program: Program,
+  operation: () => Promise<T>,
+  maxRetries: number = 10,
+  baseDelay: number = 1000,
+): Promise<T> {
+  let attempt = 0;
+
+  while (attempt <= maxRetries) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      // Check if it's a 429 rate limit error
+      if (error?.status === 429 && attempt < maxRetries) {
+        attempt++;
+
+        // Get retry-after header value (in seconds)
+        const retryAfter =
+          error?.headers?.["retry-after"] || error?.response?.headers?.["retry-after"];
+        let waitTime: number;
+
+        if (retryAfter) {
+          // Use the retry-after header value (convert to milliseconds)
+          waitTime = parseInt(retryAfter, 10) * 1000;
+        } else {
+          // Fallback to exponential backoff
+          waitTime = baseDelay * Math.pow(2, attempt - 1);
+        }
+
+        // Add some jitter to avoid thundering herd
+        const jitter = Math.random() * 0.1 * waitTime;
+        const totalWaitTime = waitTime + jitter;
+
+        reportDiagnostic(program, {
+          code: "generator-warning",
+          format: {
+            warningMessage: `Rate limit hit (429). Retrying in ${Math.round(totalWaitTime / 1000)} seconds... (Attempt ${attempt}/${maxRetries})`,
+          },
+          target: NoTarget,
+        });
+
+        await new Promise((resolve) => setTimeout(resolve, totalWaitTime));
+        continue;
+      }
+
+      // If it's not a 429 error or we've exhausted retries, throw the error
+      throw error;
+    }
+  }
+
+  throw new Error(`Max retries (${maxRetries}) exceeded`);
 }
 
 function reportJarOutput(program: Program, jarOutput: string) {
