@@ -1,4 +1,4 @@
-import { createSdkContext } from "@azure-tools/typespec-client-generator-core";
+import { createSdkContext, UsageFlags } from "@azure-tools/typespec-client-generator-core";
 import { EmitContext, NoTarget, Program, resolvePath } from "@typespec/compiler";
 import { promises } from "fs";
 import { OpenAI } from "openai";
@@ -47,6 +47,10 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
 
     await Promise.all(
       sdkContext.sdkPackage.models.map(async (model) => {
+        if (!(model.access === "public" && (model.usage & UsageFlags.Output))) {
+          return;
+        }
+
         const filename = resolvePath(context.emitterOutputDir, model.name + ".yaml");
 
         const yaml = stringify(
