@@ -106,6 +106,7 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
             context.emitterOutputDir,
             "src/main/java",
             model.namespace.toLocaleLowerCase().replace(/\./g, "/"),
+            "models",
           );
           await promises.mkdir(javaFilePath, { recursive: true }).catch((err) => {
             if (err.code !== "EISDIR" && err.code !== "EEXIST") {
