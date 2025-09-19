@@ -62,43 +62,45 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
 
         await program.host.writeFile(filename, yaml);
 
-        const response = await retryWithExponentialBackoff(program, async () => {
-          return await client.responses.create({
-            model: "gpt-5-mini",
-            instructions:
-              "You are an expert Java developer. Generate a Java class based on the provided YAML model. Ensure the class includes appropriate data types, constructors, getters, setters, and annotations for JSON serialization. Follow Java best practices and conventions.\n" +
-              "Use this YAML and Java as an example of the input and output: ```" +
-              EXAMPLE_YAML +
-              "``` and ```" +
-              EXAMPLE_JAVA +
-              "```.",
-            input: yaml,
-            reasoning: { effort: "low" },
-          });
-        });
-
-        const javaFilePath = resolvePath(
-          context.emitterOutputDir,
-          "src/main/java",
-          model.namespace.toLocaleLowerCase().replace(/\./g, "/"),
-        );
-        await promises.mkdir(javaFilePath, { recursive: true }).catch((err) => {
-          if (err.code !== "EISDIR" && err.code !== "EEXIST") {
-            reportDiagnostic(program, {
-              code: "unknown-error",
-              format: {
-                errorMessage: `Failed to create output directory: ${context.emitterOutputDir}.`,
-              },
-              target: NoTarget,
+        if (!options["skip-code"]) {
+          const response = await retryWithExponentialBackoff(program, async () => {
+            return await client.responses.create({
+              model: "gpt-5-mini",
+              instructions:
+                "You are an expert Java developer. Generate a Java class based on the provided YAML model. Ensure the class includes appropriate data types, constructors, getters, setters, and annotations for JSON serialization. Follow Java best practices and conventions.\n" +
+                "Use this YAML and Java as an example of the input and output: ```" +
+                EXAMPLE_YAML +
+                "``` and ```" +
+                EXAMPLE_JAVA +
+                "```.",
+              input: yaml,
+              reasoning: { effort: "low" },
             });
-            return;
+          });
+
+          const javaFilePath = resolvePath(
+            context.emitterOutputDir,
+            "src/main/java",
+            model.namespace.toLocaleLowerCase().replace(/\./g, "/"),
+          );
+          await promises.mkdir(javaFilePath, { recursive: true }).catch((err) => {
+            if (err.code !== "EISDIR" && err.code !== "EEXIST") {
+              reportDiagnostic(program, {
+                code: "unknown-error",
+                format: {
+                  errorMessage: `Failed to create output directory: ${context.emitterOutputDir}.`,
+                },
+                target: NoTarget,
+              });
+              return;
+            }
+          });
+          const javaFilename = resolvePath(javaFilePath, model.name + ".java");
+          const messageOutput = response.output.find((o: any) => o.type === "message") as any;
+          const text = messageOutput?.content?.[0];
+          if (text?.type === "output_text") {
+            await program.host.writeFile(javaFilename, text.text);
           }
-        });
-        const javaFilename = resolvePath(javaFilePath, model.name + ".java");
-        const messageOutput = response.output.find((o: any) => o.type === "message") as any;
-        const text = messageOutput?.content?.[0];
-        if (text?.type === "output_text") {
-          await program.host.writeFile(javaFilename, text.text);
         }
       }),
     );

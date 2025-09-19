@@ -167,6 +167,8 @@ const { isEqual } = pkg;
 export interface EmitterOptionsDev {
   flavor?: string;
 
+  "skip-code": boolean;
+
   // service
   namespace?: string;
   "service-name"?: string;
