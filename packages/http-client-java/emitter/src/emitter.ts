@@ -40,7 +40,7 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
         examplesJava.push(java);
       }
     }
-
+    const baseInstructions = await promises.readFile(path.resolve(assertsPath, "base-instructions.md"), "utf-8");
 
     await promises.mkdir(context.emitterOutputDir, { recursive: true }).catch((err) => {
       if (err.code !== "EISDIR" && err.code !== "EEXIST") {
@@ -88,7 +88,7 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
         if (!options["skip-code"]) {
           const response = await retryWithExponentialBackoff(program, async () => {
             let instructions = 
-              "You are an expert Java developer. Generate a Java class based on the provided YAML model. Ensure the class includes appropriate data types, constructors, getters, setters, and annotations for JSON serialization. Follow Java best practices and conventions.\n" +
+              baseInstructions +
               "Use this YAML and Java as an example of the input and output:\n";
             for (let i = 0; i < examplesYaml.length; i++) {
               instructions += "```yaml\n" + examplesYaml[i] + "```\n\n```java\n" + examplesJava[i] + "```\n";
