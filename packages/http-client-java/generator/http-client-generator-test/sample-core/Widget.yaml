@@ -1,0 +1,102 @@
+kind: model
+decorators: []
+name: Widget
+isGeneratedName: false
+namespace: Contoso.WidgetManager
+doc: A widget.
+properties:
+  - doc: The widget name.
+    apiVersions:
+      - 2022-08-30
+    type:
+      kind: string
+      decorators: []
+      name: string
+      doc: A sequence of textual characters.
+      crossLanguageDefinitionId: TypeSpec.string
+    name: name
+    isGeneratedName: false
+    optional: false
+    isApiVersionParam: false
+    onClient: false
+    crossLanguageDefinitionId: Contoso.WidgetManager.Widget.name
+    decorators: []
+    visibility:
+      - 1
+    access: public
+    kind: property
+    discriminator: false
+    serializedName: name
+    isMultipartFileInput: false
+    flatten: false
+    serializationOptions: {}
+  - doc: The ID of the widget's manufacturer.
+    apiVersions:
+      - 2022-08-30
+    type:
+      kind: string
+      decorators: []
+      name: string
+      doc: A sequence of textual characters.
+      crossLanguageDefinitionId: TypeSpec.string
+    name: manufacturerId
+    isGeneratedName: false
+    optional: false
+    isApiVersionParam: false
+    onClient: false
+    crossLanguageDefinitionId: Contoso.WidgetManager.Widget.manufacturerId
+    decorators: []
+    visibility:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+    access: public
+    kind: property
+    discriminator: false
+    serializedName: manufacturerId
+    isMultipartFileInput: false
+    flatten: false
+    serializationOptions: {}
+  - doc: The entity tag for this resource.
+    apiVersions:
+      - 2022-08-30
+    type:
+      kind: string
+      decorators: []
+      name: eTag
+      doc: |-
+        The ETag (or entity tag) HTTP response header is an identifier for a specific version of a resource.
+        It lets caches be more efficient and save bandwidth, as a web server does not need to resend a full response if the content was not changed.
+
+        It is a string of ASCII characters placed between double quotes, like "675af34563dc-tr34".
+      baseType:
+        kind: string
+        decorators: []
+        name: string
+        doc: A sequence of textual characters.
+        crossLanguageDefinitionId: TypeSpec.string
+      crossLanguageDefinitionId: Azure.Core.eTag
+    name: etag
+    isGeneratedName: false
+    optional: false
+    isApiVersionParam: false
+    onClient: false
+    crossLanguageDefinitionId: Contoso.WidgetManager.Widget.etag
+    decorators: []
+    visibility:
+      - 1
+    access: public
+    kind: property
+    discriminator: false
+    serializedName: etag
+    isMultipartFileInput: false
+    flatten: false
+    serializationOptions: {}
+access: public
+usage: 6
+crossLanguageDefinitionId: Contoso.WidgetManager.Widget
+apiVersions:
+  - 2022-08-30
+serializationOptions: {}

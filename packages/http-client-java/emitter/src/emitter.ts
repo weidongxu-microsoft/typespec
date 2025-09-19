@@ -1,15 +1,15 @@
 import { createSdkContext, UsageFlags } from "@azure-tools/typespec-client-generator-core";
 import { EmitContext, NoTarget, Program, resolvePath } from "@typespec/compiler";
-import { promises, readFile } from "fs";
+import { promises } from "fs";
 import { OpenAI } from "openai";
+import path from "path";
+import { fileURLToPath } from "url";
 import { stringify } from "yaml";
 import { EmitterOptionsDev } from "./code-model-builder.js";
 import { LibName, reportDiagnostic } from "./lib.js";
 import { EmitterOptions, LIB_NAME } from "./options.js";
 import { trace } from "./utils.js";
 import { validateDependencies } from "./validate.js";
-import path from "path";
-import { fileURLToPath } from "url";
 
 export async function $onEmit(context: EmitContext<EmitterOptions>) {
   const program = context.program;
@@ -30,17 +30,28 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
 
     const distPath = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
     const assertsPath = path.resolve(distPath, "assets");
-    const files = await promises.readdir(assertsPath);
+    let samplePath = assertsPath;
+    if (options["sample-dir"]) {
+      samplePath = path.resolve(program.projectRoot, options["sample-dir"]);
+    }
+    const files = await promises.readdir(samplePath);
     for (const file of files) {
       if (file.endsWith(".yaml")) {
-        const yaml = await promises.readFile(path.resolve(assertsPath, file), "utf-8");
+        const yaml = await promises.readFile(path.resolve(samplePath, file), "utf-8");
         examplesYaml.push(yaml);
 
-        const java = await promises.readFile(path.resolve(assertsPath, file.replace(".yaml", ".java")), "utf-8");
+        const java = await promises.readFile(
+          path.resolve(samplePath, file.replace(".yaml", ".java")),
+          "utf-8",
+        );
         examplesJava.push(java);
       }
     }
-    const baseInstructions = await promises.readFile(path.resolve(assertsPath, "base-instructions.md"), "utf-8");
+    const baseInstructions = await promises.readFile(
+      path.resolve(assertsPath, "base-instructions.md"),
+      "utf-8",
+    );
+    const pomXml = await promises.readFile(path.resolve(assertsPath, "pom.xml"), "utf-8");
 
     await promises.mkdir(context.emitterOutputDir, { recursive: true }).catch((err) => {
       if (err.code !== "EISDIR" && err.code !== "EEXIST") {
@@ -64,71 +75,76 @@ export async function $onEmit(context: EmitContext<EmitterOptions>) {
       versioning: { previewStringRegex: /$/ },
     });
 
-    await Promise.all(
-      sdkContext.sdkPackage.models.map(async (model) => {
-        if (!(model.access === "public" && (model.usage & UsageFlags.Output))) {
-          return;
-        }
+    if (!program.hasError()) {
+      await program.host.writeFile(resolvePath(context.emitterOutputDir, "pom.xml"), pomXml);
 
-        const filename = resolvePath(context.emitterOutputDir, model.name + ".yaml");
-
-        const yaml = stringify(
-          model,
-          (k, v) => {
-            if (typeof k === "string" && k.startsWith("__")) {
-              return undefined; // skip keys starting with "__" from the output
-            }
-            return v;
-          },
-          { lineWidth: 0 },
-        );
-
-        await program.host.writeFile(filename, yaml);
-
-        if (!options["skip-code"]) {
-          const response = await retryWithExponentialBackoff(program, async () => {
-            let instructions = 
-              baseInstructions +
-              "Use this YAML and Java as an example of the input and output:\n";
-            for (let i = 0; i < examplesYaml.length; i++) {
-              instructions += "```yaml\n" + examplesYaml[i] + "```\n\n```java\n" + examplesJava[i] + "```\n";
-            }
-
-            return await client.responses.create({
-              model: "gpt-5-mini",
-              instructions: instructions,
-              input: yaml,
-              reasoning: { effort: "low" },
-            });
-          });
-
-          const javaFilePath = resolvePath(
-            context.emitterOutputDir,
-            "src/main/java",
-            model.namespace.toLocaleLowerCase().replace(/\./g, "/"),
-            "models",
-          );
-          await promises.mkdir(javaFilePath, { recursive: true }).catch((err) => {
-            if (err.code !== "EISDIR" && err.code !== "EEXIST") {
-              reportDiagnostic(program, {
-                code: "unknown-error",
-                format: {
-                  errorMessage: `Failed to create output directory: ${context.emitterOutputDir}.`,
-                },
-                target: NoTarget,
-              });
-              return;
-            }
-          });
-          const javaFilename = resolvePath(javaFilePath, model.name + ".java");
-          const messageOutput = response.output.find((o: any) => o.type === "message") as any;
-          const text = messageOutput?.content?.[0];
-          if (text?.type === "output_text") {
-            await program.host.writeFile(javaFilename, text.text);
+      await Promise.all(
+        sdkContext.sdkPackage.models.map(async (model) => {
+          if (!(model.access === "public" && model.usage & UsageFlags.Output)) {
+            return;
           }
-        }
-      }),
-    );
+
+          const filename = resolvePath(context.emitterOutputDir, model.name + ".yaml");
+
+          const yaml = stringify(
+            model,
+            (k, v) => {
+              if (typeof k === "string" && k.startsWith("__")) {
+                return undefined; // skip keys starting with "__" from the output
+              }
+              return v;
+            },
+            { lineWidth: 0 },
+          );
+
+          await program.host.writeFile(filename, yaml);
+
+          if (!options["skip-code"]) {
+            const response = await retryWithExponentialBackoff(program, async () => {
+              let instructions =
+                baseInstructions +
+                "Use this YAML and Java as an example of the input and output:\n";
+              for (let i = 0; i < examplesYaml.length; i++) {
+                instructions +=
+                  "```yaml\n" + examplesYaml[i] + "```\n\n```java\n" + examplesJava[i] + "```\n";
+              }
+
+              return await client.responses.create({
+                model: "gpt-5-mini",
+                instructions: instructions,
+                input: yaml,
+                reasoning: { effort: "low" },
+              });
+            });
+
+            const javaFilePath = resolvePath(
+              context.emitterOutputDir,
+              "src/main/java",
+              model.namespace.toLocaleLowerCase().replace(/\./g, "/"),
+              "models",
+            );
+            await promises.mkdir(javaFilePath, { recursive: true }).catch((err) => {
+              if (err.code !== "EISDIR" && err.code !== "EEXIST") {
+                reportDiagnostic(program, {
+                  code: "unknown-error",
+                  format: {
+                    errorMessage: `Failed to create output directory: ${context.emitterOutputDir}.`,
+                  },
+                  target: NoTarget,
+                });
+                return;
+              }
+            });
+            const javaFilename = resolvePath(javaFilePath, model.name + ".java");
+            const messageOutput = response.output.find((o: any) => o.type === "message") as any;
+            const text = messageOutput?.content?.[0];
+            if (text?.type === "output_text") {
+              await program.host.writeFile(javaFilename, text.text);
+            }
+          }
+        }),
+      );
+    }
   }
 }
 

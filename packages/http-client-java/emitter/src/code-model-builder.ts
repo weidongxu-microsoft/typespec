@@ -168,6 +168,7 @@ export interface EmitterOptionsDev {
   flavor?: string;
 
   "skip-code": boolean;
+  "sample-dir": string;
 
   // service
   namespace?: string;
