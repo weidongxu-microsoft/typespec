@@ -1,0 +1,157 @@
+kind: model
+decorators: []
+name: WidgetRepairRequest
+isGeneratedName: false
+namespace: Contoso.WidgetManager
+doc: A submitted repair request for a widget.
+properties:
+  - doc: The date and time when the repair is scheduled to occur.
+    apiVersions:
+      - 2022-08-30
+    type:
+      kind: utcDateTime
+      decorators: []
+      name: utcDateTime
+      encode: rfc3339
+      wireType:
+        kind: string
+        decorators: []
+        name: string
+        doc: A sequence of textual characters.
+        crossLanguageDefinitionId: TypeSpec.string
+      doc: An instant in coordinated universal time (UTC)"
+      crossLanguageDefinitionId: TypeSpec.utcDateTime
+    name: scheduledDateTime
+    isGeneratedName: false
+    optional: false
+    isApiVersionParam: false
+    onClient: false
+    crossLanguageDefinitionId: Contoso.WidgetManager.WidgetRepairRequest.scheduledDateTime
+    decorators: []
+    visibility:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+    access: public
+    kind: property
+    discriminator: false
+    serializedName: scheduledDateTime
+    isMultipartFileInput: false
+    flatten: false
+    serializationOptions: {}
+  - doc: The date and time when the request was created.
+    apiVersions:
+      - 2022-08-30
+    type:
+      kind: utcDateTime
+      decorators: []
+      name: utcDateTime
+      encode: rfc3339
+      wireType:
+        kind: string
+        decorators: []
+        name: string
+        doc: A sequence of textual characters.
+        crossLanguageDefinitionId: TypeSpec.string
+      doc: An instant in coordinated universal time (UTC)"
+      crossLanguageDefinitionId: TypeSpec.utcDateTime
+    name: createdDateTime
+    isGeneratedName: false
+    optional: false
+    isApiVersionParam: false
+    onClient: false
+    crossLanguageDefinitionId: Contoso.WidgetManager.WidgetRepairRequest.createdDateTime
+    decorators: []
+    visibility:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+    access: public
+    kind: property
+    discriminator: false
+    serializedName: createdDateTime
+    isMultipartFileInput: false
+    flatten: false
+    serializationOptions: {}
+  - doc: The date and time when the request was updated.
+    apiVersions:
+      - 2022-08-30
+    type:
+      kind: utcDateTime
+      decorators: []
+      name: utcDateTime
+      encode: rfc3339
+      wireType:
+        kind: string
+        decorators: []
+        name: string
+        doc: A sequence of textual characters.
+        crossLanguageDefinitionId: TypeSpec.string
+      doc: An instant in coordinated universal time (UTC)"
+      crossLanguageDefinitionId: TypeSpec.utcDateTime
+    name: updatedDateTime
+    isGeneratedName: false
+    optional: false
+    isApiVersionParam: false
+    onClient: false
+    crossLanguageDefinitionId: Contoso.WidgetManager.WidgetRepairRequest.updatedDateTime
+    decorators: []
+    visibility:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+    access: public
+    kind: property
+    discriminator: false
+    serializedName: updatedDateTime
+    isMultipartFileInput: false
+    flatten: false
+    serializationOptions: {}
+  - doc: The date and time when the request was completed.
+    apiVersions:
+      - 2022-08-30
+    type:
+      kind: utcDateTime
+      decorators: []
+      name: utcDateTime
+      encode: rfc3339
+      wireType:
+        kind: string
+        decorators: []
+        name: string
+        doc: A sequence of textual characters.
+        crossLanguageDefinitionId: TypeSpec.string
+      doc: An instant in coordinated universal time (UTC)"
+      crossLanguageDefinitionId: TypeSpec.utcDateTime
+    name: completedDateTime
+    isGeneratedName: false
+    optional: false
+    isApiVersionParam: false
+    onClient: false
+    crossLanguageDefinitionId: Contoso.WidgetManager.WidgetRepairRequest.completedDateTime
+    decorators: []
+    visibility:
+      - 1
+      - 2
+      - 4
+      - 8
+      - 16
+    access: public
+    kind: property
+    discriminator: false
+    serializedName: completedDateTime
+    isMultipartFileInput: false
+    flatten: false
+    serializationOptions: {}
+access: public
+usage: 6
+crossLanguageDefinitionId: Contoso.WidgetManager.WidgetRepairRequest
+apiVersions:
+  - 2022-08-30
+serializationOptions: {}
