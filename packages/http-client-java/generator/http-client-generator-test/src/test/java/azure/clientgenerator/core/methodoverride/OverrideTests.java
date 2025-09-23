@@ -56,6 +56,18 @@ public class OverrideTests {
     }
 
     @Test
+    public void testRequireOptionalParameter() {
+        RequireOptionalParameterClient client = new OverrideClientBuilder().buildRequireOptionalParameterClient();
+        client.requireOptional("param1", "param2");
+    }
+
+    @Test
+    public void testRemoveOptionalParameter() {
+        RemoveOptionalParameterClient client = new OverrideClientBuilder().buildRemoveOptionalParameterClient();
+        client.removeOptional("param1", "param2");
+    }
+
+    @Test
     public void testGroupParametersOptionsModel() {
         // Verify the GroupParametersOptions model structure and functionality
         GroupParametersOptions options = new GroupParametersOptions("value1", "value2");
