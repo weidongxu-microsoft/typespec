@@ -2704,11 +2704,13 @@ export class CodeModelBuilder {
   }
 
   private processBooleanSchema(type: SdkBuiltInType, name: string): BooleanSchema {
-    return this.codeModel.schemas.add(
-      new BooleanSchema(name, type.doc ?? "", {
-        summary: type.summary,
-      }),
-    );
+    const schema = new BooleanSchema(name, type.doc ?? "", {
+      summary: type.summary,
+    });
+    if (type.encode === "string") {
+      (schema as EncodedSchema).encode = type.encode;
+    }
+    return this.codeModel.schemas.add(schema);
   }
 
   private processArraySchema(type: SdkArrayType, name: string): ArraySchema {
